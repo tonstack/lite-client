@@ -1,0 +1,16 @@
+[package]
+name = "liteclient"
+version = "0.1.0"
+authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+tokio = { features = ['rt-multi-thread'], version = '1.5.0' }
+adnl = { features = ['client'], git = 'https://github.com/tonlabs/ton-labs-adnl', tag = '0.7.66' }
+ton_api = { git = 'https://github.com/tonlabs/ton-labs-tl', package = 'ton_api', tag = '0.2.120' }
+base64 = '0.13.0'
+hex = '0.4.3'
+env_logger = '0.9.0'
+log = '0.4.14'
+extfmt = '0.1.1'
+clap = { version = "3.1.6", features = ["derive"] }
