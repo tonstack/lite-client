@@ -3,7 +3,7 @@ use std::fs::{read_to_string, File};
 use std::path::PathBuf;
 use liteclient::LiteClient;
 use clap::{Parser, Subcommand};
-use std::io::Read;
+use std::io::{Read, stdin};
 use chrono::{DateTime, Utc};
 use std::time::{Duration, UNIX_EPOCH};
 
@@ -45,7 +45,11 @@ async fn main() -> Result<()> {
         }
         Commands::Send { file } => {
             let mut data = Vec::new();
-            File::open(file)?.read_to_end(&mut data)?;
+            if file.to_str().map(|f| f == "-").unwrap_or(false) {
+                stdin().read_to_end(&mut data)?;
+            } else {
+                File::open(file)?.read_to_end(&mut data)?;
+            }
             let result = client.send_external_message(data).await?;
             println!("result = {:?}", result);
         }
