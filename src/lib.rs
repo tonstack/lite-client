@@ -6,11 +6,12 @@ mod private {
     use adnl::client::{AdnlClient, AdnlClientConfig};
     use adnl::common::{serialize, TaggedTlObject};
     use ton_api::AnyBoxedSerialize;
+    use ton_api::BoxedSerialize;
     use ton_api::ton::rpc::lite_server;
     use ton_api::ton::{bytes, TLObject};
-    use extfmt::AsHexdump;
     use ton_api::ton::lite_server::{CurrentTime, SendMsgStatus};
     use ton_api::ton::rpc::lite_server::{GetTime, SendMessage};
+    use pretty_hex::PrettyHex;
 
     pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -30,9 +31,9 @@ mod private {
                     data: bytes(serialize(&TLObject::new(request))?)
                 })
             };
-            log::debug!("Sending query {}", query.as_hexdump());
+            log::debug!("Sending query:\n{:?}", query.object.boxed_serialized_bytes()?.hex_dump());
             let result = self.client.query(&query).await?;
-            log::debug!("Received {}", result.as_hexdump());
+            log::debug!("Received:\n{:?}", result.boxed_serialized_bytes()?.hex_dump());
             result.downcast::<U>().map_err(|_| "Downcast failed".into())
         }
 
