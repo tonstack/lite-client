@@ -39,8 +39,9 @@ async fn main() -> Result<()> {
     let mut client = LiteClient::connect(&config).await?;
     match &args.command {
         Commands::GetTime => {
-            let result = client.get_time().await?;
-            println!("Current time: {} => {:?}", result.now(), UNIX_EPOCH + Duration::from_secs(*result.now() as u64));
+            let result = *client.get_time().await?.now() as u64;
+            let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
+            println!("Current time: {} => {:?}", result, time);
         }
         Commands::Send { file } => {
             let mut data = Vec::new();
