@@ -2,6 +2,11 @@
 
 An attempt to rewrite [lite-client](https://github.com/ton-blockchain/ton/tree/master/lite-client) for TON Blockchain in Rust using [ton-labs-adnl library](https://github.com/tonlabs/ton-labs-adnl).
 
+## Roadmap
+- [ ] Implement own ADNL library instead of using Everscale
+- [ ] Write documentation for ADNL protocol
+- [ ] Implement all functions of the original lite-client
+
 ## Installation
 ```bash
 # workdir = cloned repo folder
@@ -21,22 +26,37 @@ Create file `config.json` with liteserver ip, port and public key:
 ```
 (that is a testnet server from https://newton-blockchain.github.io/testnet-global.config.json)
 
-Run liteclient:
+Send an external message to TON:
 ```bash
-liteclient -c ./config.json
+echo 1234 | liteclient send -  # accept message bytes from stdin
+liteclient send ./query.boc  # read from file
 ```
 It prints:
 ```
-result = LiteServer_CurrentTime(CurrentTime { now: 1647197653 })
+[ERROR] Server error [code=0]: cannot apply external message to current state : failed to parse external message cannot deserialize bag-of-cells: invalid header, error 0
 ```
-Note that for now it simply executes `liteServer.getTime` command and prints raw result.
+
 ## Debug logging
 ```bash
-RUST_LOG=debug liteclient
+echo 1234 | RUST_LOG=debug liteclient send -
 ```
 prints:
 ```
-[2022-03-13T18:55:19Z DEBUG liteclient::private] Sending query 00000000 60 78 d0 e3 8d 55 00 00 e0 9b 06 e3 8d 55 00 00
-[2022-03-13T18:55:19Z DEBUG liteclient::private] Received 00000000      a0 75 d0 e3 8d 55 00 00 80 72 08 e3 8d 55 00 00
-result = LiteServer_CurrentTime(CurrentTime { now: 1647197720 })
+[2022-03-15T10:43:55Z DEBUG liteclient::private] Sending query:
+    Length: 20 (0x14) bytes
+    0000:   df 06 8c 79  0c 82 d4 0a  69 05 31 32  33 34 0a 00   ...y....i.1234..
+    0010:   00 00 00 00                                          ....
+[2022-03-15T10:43:55Z DEBUG liteclient::private] Received:
+    Length: 148 (0x94) bytes
+    0000:   48 e1 a9 bb  00 00 00 00  8a 63 61 6e  6e 6f 74 20   H........cannot
+    0010:   61 70 70 6c  79 20 65 78  74 65 72 6e  61 6c 20 6d   apply external m
+    0020:   65 73 73 61  67 65 20 74  6f 20 63 75  72 72 65 6e   essage to curren
+    0030:   74 20 73 74  61 74 65 20  3a 20 66 61  69 6c 65 64   t state : failed
+    0040:   20 74 6f 20  70 61 72 73  65 20 65 78  74 65 72 6e    to parse extern
+    0050:   61 6c 20 6d  65 73 73 61  67 65 20 63  61 6e 6e 6f   al message canno
+    0060:   74 20 64 65  73 65 72 69  61 6c 69 7a  65 20 62 61   t deserialize ba
+    0070:   67 2d 6f 66  2d 63 65 6c  6c 73 3a 20  69 6e 76 61   g-of-cells: inva
+    0080:   6c 69 64 20  68 65 61 64  65 72 2c 20  65 72 72 6f   lid header, erro
+    0090:   72 20 30 00                                          r 0.
+[ERROR] Server error [code=0]: cannot apply external message to current state : failed to parse external message cannot deserialize bag-of-cells: invalid header, error 0
 ```
