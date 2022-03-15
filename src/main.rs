@@ -31,13 +31,8 @@ enum Commands {
     GetTime,
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    env_logger::init();
-    let args = Args::parse();
-    let config = read_to_string(args.config)?;
-    let mut client = LiteClient::connect(&config).await?;
-    match &args.command {
+async fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
+    match command {
         Commands::GetTime => {
             let result = *client.get_time().await?.now() as u64;
             let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
@@ -54,6 +49,17 @@ async fn main() -> Result<()> {
             println!("result = {:?}", result);
         }
     };
+    Ok(())
+}
 
+#[tokio::main]
+async fn main() -> Result<()> {
+    env_logger::init();
+    let args = Args::parse();
+    let config = read_to_string(args.config)?;
+    let mut client = LiteClient::connect(&config).await?;
+    if let Err(e) = execute_command(&mut client, &args.command).await {
+        println!("[ERROR] {}", e);
+    }
     Ok(())
 }
