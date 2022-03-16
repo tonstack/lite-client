@@ -1,3 +1,5 @@
+mod adnl;
+
 pub use private::LiteClient;
 pub use private::Result;
 pub use private::DeserializeError;
