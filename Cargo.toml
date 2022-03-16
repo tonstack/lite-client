@@ -23,3 +23,4 @@ aes = "0.8.1"
 # adnl tests
 x25519-dalek = "1.2.0"
 rand = { version = "0.8.5", features = ["min_const_gen"] }
+hex = "0.4.3"

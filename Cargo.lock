@@ -665,6 +665,7 @@ dependencies = [
  "clap",
  "ctr 0.9.1",
  "env_logger",
+ "hex",
  "log",
  "pretty-hex",
  "rand 0.8.5",
