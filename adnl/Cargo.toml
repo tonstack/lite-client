@@ -1,0 +1,18 @@
+[package]
+name = "adnl"
+version = "0.1.0"
+authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+sha2 = "0.10.2"
+ctr = "0.9.1"
+aes = "0.8.1"
+rand = { version = "0.8.5", features = ["min_const_gen"], optional = true }
+
+[dev-dependencies]
+hex = "0.4.3"
+
+[features]
+default = []
+std = ["rand"]
