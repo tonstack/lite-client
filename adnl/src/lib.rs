@@ -8,6 +8,7 @@ mod client;
 
 #[cfg(test)]
 mod tests;
+mod client_builder;
 
 pub use helper_types::{AdnlAesParams, AdnlSecret, AdnlAddress, AdnlPublicKey, Empty, AdnlError};
 pub use handshake::AdnlHandshake;
