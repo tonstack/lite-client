@@ -8,11 +8,13 @@ edition = "2021"
 sha2 = "0.10.2"
 ctr = "0.9.1"
 aes = "0.8.1"
-rand = { version = "0.8.5", features = ["min_const_gen"], optional = true }
+log = "0.4.14"
+ciborium-io = "0.2.0"
+rand = { version = "0.6", optional = true }
 
 [dev-dependencies]
 hex = "0.4.3"
 
 [features]
 default = []
-std = ["rand"]
+std = ["rand", "ciborium-io/std"]

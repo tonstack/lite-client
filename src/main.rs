@@ -31,10 +31,10 @@ enum Commands {
     GetTime,
 }
 
-async fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
+fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
     match command {
         Commands::GetTime => {
-            let result = *client.get_time().await?.now() as u64;
+            let result = *client.get_time()?.now() as u64;
             let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
             println!("Current time: {} => {:?}", result, time);
         }
@@ -45,20 +45,19 @@ async fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<
             } else {
                 File::open(file)?.read_to_end(&mut data)?;
             }
-            let result = client.send_external_message(data).await?;
+            let result = client.send_external_message(data)?;
             println!("result = {:?}", result);
         }
     };
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
     let config = read_to_string(args.config)?;
-    let mut client = LiteClient::connect(&config).await?;
-    if let Err(e) = execute_command(&mut client, &args.command).await {
+    let mut client = LiteClient::connect(&config)?;
+    if let Err(e) = execute_command(&mut client, &args.command) {
         println!("[ERROR] {}", e);
     }
     Ok(())

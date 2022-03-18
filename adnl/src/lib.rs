@@ -4,18 +4,16 @@ mod helper_types;
 mod handshake;
 mod send;
 mod receive;
-
-#[cfg(feature = "std")]
-mod io;
+mod client;
 
 #[cfg(test)]
 mod tests;
 
-pub use helper_types::{AdnlAesParams, IntegrityError, AdnlSecret, AdnlAddress, AdnlPublicKey};
+pub use helper_types::{AdnlAesParams, AdnlSecret, AdnlAddress, AdnlPublicKey, Empty, AdnlError};
 pub use handshake::AdnlHandshake;
-pub use send::{AdnlSender, AdnlPacketBuilder};
+pub use send::AdnlSender;
 pub use receive::AdnlReceiver;
 
 #[cfg(feature = "std")]
-pub use io::AdnlClient;
+pub use client::AdnlClient;
 

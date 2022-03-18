@@ -101,7 +101,6 @@ fn test_recv_2() {
 }
 
 fn test_recv(client: &mut AdnlReceiver, encrypted_length: Vec<u8>, encrypted_packet: Vec<u8>, expected_data: Vec<u8>) {
-
     let encrypted_len: [u8; 4] = encrypted_length.try_into().unwrap();
     let mut encrypted_packet = encrypted_packet;
 

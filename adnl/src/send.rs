@@ -1,7 +1,9 @@
 use ctr::cipher::StreamCipher;
 use sha2::{Sha256, Digest};
 use aes::cipher::KeyIvInit;
-use crate::AdnlAesParams;
+use ciborium_io::Write;
+
+use crate::{AdnlAesParams, AdnlError, Empty};
 use crate::helper_types::AdnlAes;
 
 pub struct AdnlSender {
@@ -15,51 +17,33 @@ impl AdnlSender {
         }
     }
 
-    pub fn send_packet<'a>(&'a mut self, nonce: &'a mut [u8; 32], buffer: &'a mut [u8]) -> AdnlPacketBuilder<'a> {
-        AdnlPacketBuilder::build(&mut self.aes, nonce, buffer)
-    }
-}
-
-pub struct AdnlPacketBuilder<'a> {
-    length: [u8; 4],
-    nonce: &'a mut [u8; 32],
-    buffer: &'a mut [u8],
-    hash: [u8; 32],
-}
-
-impl<'a> AdnlPacketBuilder<'a> {
-    pub fn length(&'a self) -> &'a [u8; 4] {
-        &self.length
+    pub fn estimate_packet_length(buffer: &[u8]) -> u32 {
+        buffer.len() as u32 + 68
     }
 
-    pub fn nonce(&'a self) -> &'a [u8; 32] {
-        &self.nonce
-    }
-
-    pub fn buffer(&'a self) -> &'a [u8] {
-        &self.buffer
-    }
-
-    pub fn hash(&'a self) -> &'a [u8; 32] {
-        &self.hash
-    }
-
-    pub fn build(aes: &'a mut AdnlAes, nonce: &'a mut [u8; 32], buffer: &'a mut [u8]) -> Self {
+    pub fn send<W: Write>(&mut self, transport: &mut W, nonce: &mut [u8; 32], buffer: &mut [u8]) -> Result<(), AdnlError<Empty, W, Empty>> {
         // remember not to send more than 4 GiB in a single packet
         let mut length = ((buffer.len() + 64) as u32).to_le_bytes();
+
+        // calc hash
         let mut hasher = Sha256::new();
         hasher.update(&*nonce);
         hasher.update(&*buffer);
         let mut hash: [u8; 32] = hasher.finalize().try_into().unwrap();
-        aes.apply_keystream(&mut length);
-        aes.apply_keystream(nonce);
-        aes.apply_keystream(buffer);
-        aes.apply_keystream(&mut hash);
-        Self {
-            length,
-            nonce,
-            buffer,
-            hash,
-        }
+
+        // encrypt packet
+        self.aes.apply_keystream(&mut length);
+        self.aes.apply_keystream(nonce);
+        self.aes.apply_keystream(buffer);
+        self.aes.apply_keystream(&mut hash);
+
+        // write to transport
+        transport.write_all(&length).map_err(|e| AdnlError::WriteError(e))?;
+        transport.write_all(nonce).map_err(|e| AdnlError::WriteError(e))?;
+        transport.write_all(buffer).map_err(|e| AdnlError::WriteError(e))?;
+        transport.write_all(&hash).map_err(|e| AdnlError::WriteError(e))?;
+        transport.flush().map_err(|e| AdnlError::WriteError(e))?;
+
+        Ok(())
     }
 }

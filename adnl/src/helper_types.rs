@@ -1,8 +1,7 @@
 use aes::Aes256;
 use ctr::Ctr128BE;
 use sha2::{Sha256, Digest};
-
-pub struct IntegrityError;
+use ciborium_io::{Read, Write};
 
 pub type AdnlAes = Ctr128BE<Aes256>;
 
@@ -35,7 +34,8 @@ impl From<[u8; 160]> for AdnlAesParams {
 impl AdnlAesParams {
     #[cfg(feature = "std")]
     pub fn generate() -> Self {
-        Self::from(rand::random::<[u8; 160]>())
+        let raw: [u8; 160] = (0..160).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>().try_into().unwrap();
+        Self::from(raw)
     }
 
     pub fn rx_key(&self) -> &[u8; 32] {
@@ -120,4 +120,36 @@ impl AdnlSecret {
     pub fn as_bytes(&self) -> &[u8; 32] {
         &self.0
     }
+}
+
+#[derive(Debug)]
+pub struct Empty;
+
+impl Write for Empty {
+    type Error = ();
+
+    fn write_all(&mut self, data: &[u8]) -> Result<(), Self::Error> {
+        Ok(())
+    }
+
+    fn flush(&mut self) -> Result<(), Self::Error> {
+        Ok(())
+    }
+}
+
+impl Read for Empty {
+    type Error = ();
+
+    fn read_exact(&mut self, data: &mut [u8]) -> Result<(), Self::Error> {
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub enum AdnlError<R: Read, W: Write, C: Write> {
+    ReadError(R::Error),
+    WriteError(W::Error),
+    ConsumeError(C::Error),
+    IntegrityError,
+    TooShortPacket,
 }

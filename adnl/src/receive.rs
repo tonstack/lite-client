@@ -1,8 +1,9 @@
 use ctr::cipher::StreamCipher;
 use sha2::{Sha256, Digest};
 use aes::cipher::KeyIvInit;
+use ciborium_io::{Read, Write};
 use crate::helper_types::AdnlAes;
-use crate::{AdnlAesParams, IntegrityError};
+use crate::{AdnlAesParams, Empty, AdnlError};
 
 pub struct AdnlReceiver {
     aes: AdnlAes
@@ -15,23 +16,61 @@ impl AdnlReceiver {
         }
     }
 
-    pub fn receive_packet_length(&mut self, buffer: [u8; 4]) -> u32 {
-        let mut buffer = buffer;
-        self.aes.apply_keystream(&mut buffer);
-        u32::from_le_bytes(buffer)
-    }
+    pub fn receive<R: Read, C: Write, const BUFFER: usize>(&mut self, transport: &mut R, consumer: &mut C) -> Result<(), AdnlError<R, Empty, C>> {
+        // read length
+        let mut length = [0u8; 4];
+        log::debug!("reading length");
+        transport.read_exact(&mut length).map_err(|e| AdnlError::ReadError(e))?;
+        self.aes.apply_keystream(&mut length);
+        let length = u32::from_le_bytes(length);
+        log::debug!("length = {}", length);
+        if length < 64 {
+            return Err(AdnlError::TooShortPacket)
+        }
 
-    pub fn receive_packet<'a>(&mut self, buffer: &'a mut [u8]) -> Result<&'a mut [u8], IntegrityError> {
-        if buffer.len() < 32 {
-            return Err(IntegrityError);
+        let mut hasher = Sha256::new();
+
+        // read nonce
+        let mut nonce = [0u8; 32];
+        log::debug!("reading nonce");
+        transport.read_exact(&mut nonce).map_err(|e| AdnlError::ReadError(e))?;
+        self.aes.apply_keystream(&mut nonce);
+        hasher.update(&nonce);
+
+        // read buffer chunks, decrypt and write to consumer
+        let mut buffer = [0u8; BUFFER];
+        let mut bytes_to_read = length as usize - 64;
+        while bytes_to_read >= BUFFER {
+            log::debug!("chunked read (chunk len = {}), {} bytes remaining", BUFFER, bytes_to_read);
+            transport.read_exact(&mut buffer).map_err(|e| AdnlError::ReadError(e))?;
+            self.aes.apply_keystream(&mut buffer);
+            hasher.update(&buffer);
+            consumer.write_all(&buffer).map_err(|e| AdnlError::ConsumeError(e))?;
+            bytes_to_read -= BUFFER;
         }
-        self.aes.apply_keystream(buffer);
-        let (buffer, given_hash) = buffer.split_at_mut(buffer.len() - 32);
-        let computed_hash = Sha256::digest(&buffer);
-        if computed_hash.as_slice() != given_hash {
-            return Err(IntegrityError);
+
+        // read last chunk
+        if bytes_to_read > 0 {
+            log::debug!("last chunk, {} bytes remaining", bytes_to_read);
+            let buffer = &mut buffer[..bytes_to_read];
+            transport.read_exact(buffer).map_err(|e| AdnlError::ReadError(e))?;
+            self.aes.apply_keystream(buffer);
+            hasher.update(&buffer);
+            consumer.write_all(buffer).map_err(|e| AdnlError::ConsumeError(e))?;
         }
-        let (_, buffer) = buffer.split_at_mut(32);
-        Ok(buffer)
+
+        let mut given_hash = [0u8; 32];
+        log::debug!("reading hash");
+        transport.read_exact(&mut given_hash).map_err(|e| AdnlError::ReadError(e))?;
+        self.aes.apply_keystream(&mut given_hash);
+
+        let real_hash = hasher.finalize();
+        if real_hash.as_slice() != &given_hash {
+            return Err(AdnlError::IntegrityError)
+        }
+
+        log::debug!("receive finished successfully");
+
+        Ok(())
     }
 }

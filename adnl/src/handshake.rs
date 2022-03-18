@@ -4,6 +4,33 @@ use sha2::{Sha256, Digest};
 use crate::{AdnlAddress, AdnlAesParams, AdnlPublicKey, AdnlSecret};
 use crate::helper_types::AdnlAes;
 
+// make channel
+// - AES: aes_params or random generator
+// - EC:
+//   1. sender public key + receiver public key or address + secret
+//   2. sender private key + receiver public key
+
+pub trait CryptoRandom: rand::RngCore + rand::CryptoRng {}
+
+enum AesOptions<'a> {
+    StaticParams(&'a AdnlAesParams),
+    RandomParams(&'a dyn CryptoRandom),
+}
+
+pub struct HandshakeBuilder<'a> {
+    aes_options: AesOptions<'a>
+}
+
+impl<'a> HandshakeBuilder<'a> {
+    fn perform_ecdh(sender_private: AsPrivateKey, receiver_public: AsPublicKey) {
+
+    }
+
+    fn use_static_ecdh(sender_public: AsPublicKey, receiver_address: AsAddress, ecdh_secret: AsSecret) {
+
+    }
+}
+
 pub struct AdnlHandshake {
     receiver: AdnlAddress,
     sender: AdnlPublicKey,
@@ -12,6 +39,14 @@ pub struct AdnlHandshake {
 }
 
 impl AdnlHandshake {
+    pub fn with_static_aes(aes_params: &AdnlAesParams) {
+
+    }
+
+    pub fn with_random_aes(rng: &dyn CryptoRandom) {
+
+    }
+
     pub fn new(receiver: AdnlAddress, sender: AdnlPublicKey, secret: &AdnlSecret, aes_params: &AdnlAesParams) -> Self {
         let mut raw_params = aes_params.to_bytes();
         let mut hasher = Sha256::new();
