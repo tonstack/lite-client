@@ -20,6 +20,7 @@ mod private {
     use x25519_dalek::{EphemeralSecret, PublicKey, StaticSecret};
     use adnl::{AdnlAddress, AdnlClient, AdnlPublicKey, AdnlError, AdnlSecret, AdnlBuilder};
     use std::convert::TryInto;
+    use curve25519_dalek::edwards::CompressedEdwardsY;
 
     #[derive(Debug)]
     pub struct DeserializeError {
@@ -59,6 +60,10 @@ mod private {
 
     pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
+    pub fn to_montgomery(pub_key: &[u8; 32]) -> PublicKey {
+        CompressedEdwardsY::from_slice(pub_key).decompress().unwrap().to_montgomery().to_bytes().into()
+    }
+
     pub struct LiteClient {
         client: AdnlClient<TcpStream>,
     }
@@ -66,14 +71,14 @@ mod private {
     impl LiteClient {
         pub fn connect(config_json: &str) -> Result<Self> {
             let remote_public: [u8; 32] = base64::decode("JhXt7H1dZTgxQTIyGiYV4f9VUARuDxFl/1kVBjLSMB8=")?.try_into().unwrap();
-            let remote_public = PublicKey::from(remote_public);
+            let remote_public2 = to_montgomery(&remote_public);
             let local_secret = rand::random::<[u8; 32]>();
             let local_secret = StaticSecret::from(local_secret);
             let transport = TcpStream::connect(SocketAddrV4::new("65.21.74.140".parse()?, 46427))?;
             let client = AdnlBuilder::with_random_aes_params(&mut rand::rngs::OsRng)
                 .use_static_ecdh(PublicKey::from(&local_secret),
-                                 AdnlPublicKey::from(remote_public),
-                                 local_secret.diffie_hellman(&remote_public))
+                                 AdnlPublicKey::from(remote_public2),
+                                 local_secret.diffie_hellman(&remote_public2))
                 .perform_handshake(transport).map_err(|e| format!("{:?}", e))?;
             Ok(Self { client })
         }
