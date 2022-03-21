@@ -1,7 +1,5 @@
 use crate::{AdnlAesParams, AdnlHandshake, AdnlPublicKey, AdnlAddress, AdnlSecret};
 
-#[cfg(feature = "dalek")]
-use x25519_dalek::PublicKey;
 use crate::helper_types::CryptoRandom;
 
 enum AesOptions<'a> {

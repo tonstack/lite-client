@@ -1,6 +1,5 @@
 use sha2::{Sha256, Digest};
 use ciborium_io::{Read, Write};
-use std::convert::TryInto;
 
 pub trait CryptoRandom: rand_core::RngCore + rand_core::CryptoRng {}
 impl <T> CryptoRandom for T where T: rand_core::RngCore + rand_core::CryptoRng {}
