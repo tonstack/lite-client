@@ -76,14 +76,13 @@ mod private {
     impl LiteClient {
         pub fn connect(config_json: &str) -> Result<Self> {
             let remote_public: [u8; 32] = base64::decode("JhXt7H1dZTgxQTIyGiYV4f9VUARuDxFl/1kVBjLSMB8=")?.try_into().unwrap();
-            let remote_public2 = to_montgomery(&remote_public);
-            let local_secret = rand::random::<[u8; 32]>();
-            let local_secret = StaticSecret::from(local_secret);
+            let remote_public_montgomery = to_montgomery(&remote_public);
+            let local_secret = EphemeralSecret::new(rand::rngs::OsRng);
             let transport = TcpStream::connect(SocketAddrV4::new("65.21.74.140".parse()?, 46427))?;
             let client = AdnlBuilder::with_random_aes_params(&mut rand::rngs::OsRng)
                 .use_static_ecdh(to_edwards(&PublicKey::from(&local_secret)),
                                  AdnlPublicKey::from(remote_public),
-                                 local_secret.diffie_hellman(&remote_public2))
+                                 local_secret.diffie_hellman(&remote_public_montgomery))
                 .perform_handshake(transport).map_err(|e| format!("{:?}", e))?;
             Ok(Self { client })
         }
