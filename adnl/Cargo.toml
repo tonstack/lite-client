@@ -20,4 +20,5 @@ ciborium-io = { version = "0.2.0", features = ["alloc"] }
 [features]
 default = []
 dalek = ["x25519-dalek"]
+alloc = ["ciborium-io/alloc"]
 std = ["ciborium-io/std"]

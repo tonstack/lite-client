@@ -8,10 +8,10 @@ pub use wrappers::client::AdnlClient;
 pub use wrappers::builder::AdnlBuilder;
 
 mod helper_types;
-
-#[cfg(test)]
-mod tests;
 mod primitives;
 mod integrations;
 mod wrappers;
+
+#[cfg(test)]
+mod tests;
 
