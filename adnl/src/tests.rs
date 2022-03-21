@@ -2,6 +2,7 @@ extern crate alloc;
 
 use super::*;
 use alloc::vec::Vec;
+use std::convert::TryInto;
 
 #[test]
 fn test_handshake_1() {
@@ -32,7 +33,7 @@ fn test_handshake(remote_public: Vec<u8>, local_public: Vec<u8>, ecdh: Vec<u8>, 
     let local_public = AdnlPublicKey::from(local_public);
     let ecdh: [u8; 32] = ecdh.try_into().unwrap();
     let ecdh = AdnlSecret::from(ecdh);
-    let handshake = AdnlHandshake::new(AdnlAddress::from(remote_public), local_public, &ecdh, &aes_params);
+    let handshake = AdnlHandshake::new(AdnlAddress::from(remote_public), local_public, ecdh, aes_params);
     assert_eq!(handshake.to_bytes(), expected_handshake.as_slice(), "handshake is not the same!");
 }
 

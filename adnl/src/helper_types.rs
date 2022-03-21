@@ -1,15 +1,15 @@
-use aes::Aes256;
-use ctr::Ctr128BE;
 use sha2::{Sha256, Digest};
 use ciborium_io::{Read, Write};
+use std::convert::TryInto;
 
-pub type AdnlAes = Ctr128BE<Aes256>;
+pub trait CryptoRandom: rand_core::RngCore + rand_core::CryptoRng {}
+impl <T> CryptoRandom for T where T: rand_core::RngCore + rand_core::CryptoRng {}
 
-pub struct AdnlAddress([u8; 32]);
+pub struct AdnlAddress(pub(crate) [u8; 32]);
 
-pub struct AdnlPublicKey([u8; 32]);
+pub struct AdnlPublicKey(pub(crate) [u8; 32]);
 
-pub struct AdnlSecret([u8; 32]);
+pub struct AdnlSecret(pub(crate) [u8; 32]);
 
 pub struct AdnlAesParams {
     rx_key: [u8; 32],
@@ -32,12 +32,6 @@ impl From<[u8; 160]> for AdnlAesParams {
 }
 
 impl AdnlAesParams {
-    #[cfg(feature = "std")]
-    pub fn generate() -> Self {
-        let raw: [u8; 160] = (0..160).map(|_| { rand::random::<u8>() }).collect::<Vec<u8>>().try_into().unwrap();
-        Self::from(raw)
-    }
-
     pub fn rx_key(&self) -> &[u8; 32] {
         &self.rx_key
     }
@@ -62,6 +56,28 @@ impl AdnlAesParams {
         result[80..96].copy_from_slice(&self.tx_nonce);
         result[96..160].copy_from_slice(&self.padding);
         result
+    }
+
+    pub fn random<T: CryptoRandom>(csprng: &mut T) -> Self {
+        let mut result: AdnlAesParams = Default::default();
+        csprng.fill_bytes(&mut result.rx_key);
+        csprng.fill_bytes(&mut result.tx_key);
+        csprng.fill_bytes(&mut result.rx_nonce);
+        csprng.fill_bytes(&mut result.tx_nonce);
+        csprng.fill_bytes(&mut result.padding);
+        result
+    }
+}
+
+impl Default for AdnlAesParams {
+    fn default() -> Self {
+        Self {
+            rx_key: [0; 32],
+            tx_key: [0; 32],
+            rx_nonce: [0; 16],
+            tx_nonce: [0; 16],
+            padding: [0; 64],
+        }
     }
 }
 
@@ -128,7 +144,7 @@ pub struct Empty;
 impl Write for Empty {
     type Error = ();
 
-    fn write_all(&mut self, data: &[u8]) -> Result<(), Self::Error> {
+    fn write_all(&mut self, _data: &[u8]) -> Result<(), Self::Error> {
         Ok(())
     }
 
@@ -140,7 +156,7 @@ impl Write for Empty {
 impl Read for Empty {
     type Error = ();
 
-    fn read_exact(&mut self, data: &mut [u8]) -> Result<(), Self::Error> {
+    fn read_exact(&mut self, _data: &mut [u8]) -> Result<(), Self::Error> {
         Ok(())
     }
 }

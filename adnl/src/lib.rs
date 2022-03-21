@@ -1,20 +1,18 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use helper_types::{AdnlAddress, AdnlAesParams, AdnlError, AdnlPublicKey, AdnlSecret, Empty};
+pub use primitives::handshake::AdnlHandshake;
+pub use primitives::receive::AdnlReceiver;
+pub use primitives::send::AdnlSender;
+pub use wrappers::client::AdnlClient;
+pub use wrappers::builder::AdnlBuilder;
+pub use integrations::dalek;
+
 mod helper_types;
-mod handshake;
-mod send;
-mod receive;
-mod client;
 
 #[cfg(test)]
 mod tests;
-mod client_builder;
-
-pub use helper_types::{AdnlAesParams, AdnlSecret, AdnlAddress, AdnlPublicKey, Empty, AdnlError};
-pub use handshake::AdnlHandshake;
-pub use send::AdnlSender;
-pub use receive::AdnlReceiver;
-
-#[cfg(feature = "std")]
-pub use client::AdnlClient;
+mod primitives;
+mod integrations;
+mod wrappers;
 

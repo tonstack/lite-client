@@ -10,7 +10,7 @@ ctr = "0.9.1"
 aes = "0.8.1"
 log = "0.4.14"
 ciborium-io = "0.2.0"
-rand = { version = "0.6", optional = true }
+rand_core = "0.6.3"
 x25519-dalek = { version = "2.0.0-pre.1", optional = true }
 
 [dev-dependencies]
@@ -18,6 +18,5 @@ hex = "0.4.3"
 
 [features]
 default = []
-rand-aes = ["rand"]
 dalek = ["x25519-dalek"]
 std = ["ciborium-io/std"]

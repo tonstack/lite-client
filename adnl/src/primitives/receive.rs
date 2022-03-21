@@ -2,8 +2,8 @@ use ctr::cipher::StreamCipher;
 use sha2::{Sha256, Digest};
 use aes::cipher::KeyIvInit;
 use ciborium_io::{Read, Write};
-use crate::helper_types::AdnlAes;
 use crate::{AdnlAesParams, Empty, AdnlError};
+use crate::primitives::AdnlAes;
 
 pub struct AdnlReceiver {
     aes: AdnlAes

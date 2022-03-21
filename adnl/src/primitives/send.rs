@@ -4,7 +4,7 @@ use aes::cipher::KeyIvInit;
 use ciborium_io::Write;
 
 use crate::{AdnlAesParams, AdnlError, Empty};
-use crate::helper_types::AdnlAes;
+use crate::primitives::AdnlAes;
 
 pub struct AdnlSender {
     aes: AdnlAes,

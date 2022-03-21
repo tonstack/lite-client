@@ -1,3 +1,5 @@
+mod tests;
+
 pub use private::LiteClient;
 pub use private::Result;
 pub use private::DeserializeError;
@@ -16,7 +18,8 @@ mod private {
     use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
     use ton_types::UInt256;
     use x25519_dalek::{EphemeralSecret, PublicKey, StaticSecret};
-    use adnl::{AdnlAddress, AdnlClient, AdnlPublicKey, AdnlError, AdnlSecret};
+    use adnl::{AdnlAddress, AdnlClient, AdnlPublicKey, AdnlError, AdnlSecret, AdnlBuilder};
+    use std::convert::TryInto;
 
     #[derive(Debug)]
     pub struct DeserializeError {
@@ -66,18 +69,12 @@ mod private {
             let remote_public = PublicKey::from(remote_public);
             let local_secret = rand::random::<[u8; 32]>();
             let local_secret = StaticSecret::from(local_secret);
-            let ecdh = AdnlSecret::from(local_secret.diffie_hellman(&remote_public).to_bytes());
-            let remote_public = AdnlPublicKey::from(remote_public.to_bytes());
-            let remote_address = AdnlAddress::from(remote_public);
-            let local_public = AdnlPublicKey::from(PublicKey::from(&local_secret).to_bytes());
-            let ecdh = hex::decode("1f4d11789a5559b238f7ac8213e112184f16a97593b4a059c878af288a784b79").unwrap();
-            let ecdh: [u8; 32] = ecdh.try_into().unwrap();
-            let ecdh = AdnlSecret::from(ecdh);
-            let local_public = hex::decode("67d45a90e775d8f78d9feb9bdd222446e07c3de4a54e29220d18c18c5b340db3").unwrap();
-            let local_public: [u8; 32] = local_public.try_into().unwrap();
-            let local_public = AdnlPublicKey::from(local_public);
             let transport = TcpStream::connect(SocketAddrV4::new("65.21.74.140".parse()?, 46427))?;
-            let client = AdnlClient::handshake(transport, remote_address, local_public, &ecdh).map_err(|e| format!("{:?}", e))?;
+            let client = AdnlBuilder::with_random_aes_params(&mut rand::rngs::OsRng)
+                .use_static_ecdh(PublicKey::from(&local_secret),
+                                 AdnlPublicKey::from(remote_public),
+                                 local_secret.diffie_hellman(&remote_public))
+                .perform_handshake(transport).map_err(|e| format!("{:?}", e))?;
             Ok(Self { client })
         }
 
@@ -91,9 +88,9 @@ mod private {
                 )?),
             })))?;
             log::debug!("Sending query:\n{:?}", message.hex_dump());
-            self.client.send(&mut message).map_err(|e| format!("{:?}", e))?;
+            self.client.send(&mut message, &mut rand::random()).map_err(|e| format!("{:?}", e))?;
             let mut answer = Vec::<u8>::new();
-            self.client.receive(&mut answer).map_err(|e| format!("{:?}", e))?;
+            self.client.receive::<_, 8192>(&mut answer).map_err(|e| format!("{:?}", e))?;
             let result = deserialize_boxed(&answer)?.downcast::<adnl_tl::Message>().map_err(|o| Box::new(DeserializeError { object: o }))?;
             let result_obj = deserialize_boxed(&result.answer().unwrap().0)?;
             log::debug!("Received:\n{:?}", answer.hex_dump());
