@@ -4,7 +4,7 @@ An attempt to rewrite [lite-client](https://github.com/ton-blockchain/ton/tree/m
 
 ## Roadmap
 - [ ] Implement own ADNL library instead of using Everscale
-- [ ] Write documentation for ADNL protocol
+- [x] Write documentation for ADNL protocol
 - [ ] Implement all functions of the original lite-client
 
 ## Installation
