@@ -1,5 +1,3 @@
-mod tests;
-
 pub use private::LiteClient;
 pub use private::Result;
 pub use private::DeserializeError;
@@ -7,7 +5,7 @@ pub use private::DeserializeError;
 mod private {
     use std::error::Error;
     use ton_api::{AnyBoxedSerialize, deserialize_boxed, serialize_boxed};
-    use ton_api::BoxedSerialize;
+    
     use ton_api::ton::rpc::lite_server as lite_query;
     use ton_api::ton::{bytes, TLObject};
     use ton_api::ton::lite_server as lite_result;
@@ -15,13 +13,13 @@ mod private {
     use ton_api::ton::rpc::lite_server::{GetTime, SendMessage};
     use pretty_hex::PrettyHex;
     use std::fmt::{Display, Formatter};
-    use std::net::{Ipv4Addr, SocketAddrV4, TcpStream};
+    use std::net::{SocketAddrV4, TcpStream};
     use ton_types::UInt256;
-    use x25519_dalek::{EphemeralSecret, PublicKey, StaticSecret};
-    use adnl::{AdnlAddress, AdnlClient, AdnlPublicKey, AdnlError, AdnlSecret, AdnlBuilder};
+    use x25519_dalek::{StaticSecret};
+    use adnl::{AdnlClient, AdnlBuilder};
     use std::convert::TryInto;
-    use curve25519_dalek::edwards::{CompressedEdwardsY, EdwardsPoint};
-    use curve25519_dalek::montgomery::MontgomeryPoint;
+    
+    
 
     #[derive(Debug)]
     pub struct DeserializeError {
@@ -66,7 +64,7 @@ mod private {
     }
 
     impl LiteClient {
-        pub fn connect(config_json: &str) -> Result<Self> {
+        pub fn connect(_config_json: &str) -> Result<Self> {
             let remote_public: [u8; 32] = base64::decode("JhXt7H1dZTgxQTIyGiYV4f9VUARuDxFl/1kVBjLSMB8=")?.try_into().unwrap();
             let local_secret = StaticSecret::new(rand::rngs::OsRng);
             let transport = TcpStream::connect(SocketAddrV4::new("65.21.74.140".parse()?, 46427))?;
