@@ -61,14 +61,6 @@ mod private {
 
     pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
-    pub fn to_montgomery(pub_key: &[u8; 32]) -> PublicKey {
-        CompressedEdwardsY::from_slice(pub_key).decompress().unwrap().to_montgomery().to_bytes().into()
-    }
-
-    pub fn to_edwards(pub_key: &PublicKey) -> [u8; 32] {
-        MontgomeryPoint(pub_key.to_bytes()).to_edwards(0).unwrap().compress().to_bytes()
-    }
-
     pub struct LiteClient {
         client: AdnlClient<TcpStream>,
     }
@@ -76,13 +68,10 @@ mod private {
     impl LiteClient {
         pub fn connect(config_json: &str) -> Result<Self> {
             let remote_public: [u8; 32] = base64::decode("JhXt7H1dZTgxQTIyGiYV4f9VUARuDxFl/1kVBjLSMB8=")?.try_into().unwrap();
-            let remote_public_montgomery = to_montgomery(&remote_public);
-            let local_secret = EphemeralSecret::new(rand::rngs::OsRng);
+            let local_secret = StaticSecret::new(rand::rngs::OsRng);
             let transport = TcpStream::connect(SocketAddrV4::new("65.21.74.140".parse()?, 46427))?;
             let client = AdnlBuilder::with_random_aes_params(&mut rand::rngs::OsRng)
-                .use_static_ecdh(to_edwards(&PublicKey::from(&local_secret)),
-                                 AdnlPublicKey::from(remote_public),
-                                 local_secret.diffie_hellman(&remote_public_montgomery))
+                .perform_ecdh(local_secret, remote_public)
                 .perform_handshake(transport).map_err(|e| format!("{:?}", e))?;
             Ok(Self { client })
         }
