@@ -12,9 +12,12 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
-    /// LiteClient config
-    #[clap(short, long, parse(from_os_str), value_name = "FILE", default_value = "./config.json")]
-    config: PathBuf,
+    /// Local network config from file
+    #[clap(short, long, parse(from_os_str), value_name = "FILE", group = "config-group")]
+    config: Option<PathBuf>,
+    /// Use testnet config, if not provided use mainnet config
+    #[clap(short, long, parse(from_flag), group = "config-group")]
+    testnet: bool,
     #[clap(subcommand)]
     command: Commands,
 }
@@ -31,10 +34,10 @@ enum Commands {
     GetTime,
 }
 
-async fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
+fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
     match command {
         Commands::GetTime => {
-            let result = *client.get_time().await?.now() as u64;
+            let result = *client.get_time()?.now() as u64;
             let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
             println!("Current time: {} => {:?}", result, time);
         }
@@ -45,20 +48,33 @@ async fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<
             } else {
                 File::open(file)?.read_to_end(&mut data)?;
             }
-            let result = client.send_external_message(data).await?;
+            let result = client.send_external_message(data)?;
             println!("result = {:?}", result);
         }
     };
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
-    let config = read_to_string(args.config)?;
-    let mut client = LiteClient::connect(&config).await?;
-    if let Err(e) = execute_command(&mut client, &args.command).await {
+    let config = if let Some(config) = args.config {
+        read_to_string(config)?
+    } else {
+        let url = if args.testnet {
+            "https://newton-blockchain.github.io/testnet-global.config.json"
+        } else {
+            "https://newton-blockchain.github.io/global.config.json"
+        };
+        let response = ureq::get(url).call()
+            .map_err(|e| format!("Error occurred while fetching config from {}: {:?}. Use --config if you have local config.", url, e))?;
+        if response.status() != 200 {
+            return Err(format!("Url {} responded with error code {}. Use --config if you have local config.", url, response.status()).into());
+        }
+        response.into_string()?
+    };
+    let mut client = LiteClient::connect(&config)?;
+    if let Err(e) = execute_command(&mut client, &args.command) {
         println!("[ERROR] {}", e);
     }
     Ok(())
