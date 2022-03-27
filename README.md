@@ -10,8 +10,7 @@ An attempt to rewrite [lite-client](https://github.com/ton-blockchain/ton/tree/m
 
 ## Installation
 ```bash
-# workdir = cloned repo folder
-cargo install --path .
+cargo install --git https://github.com/tonstack/lite-client
 ```
 
 ## Usage
