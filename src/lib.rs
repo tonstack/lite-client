@@ -1,3 +1,8 @@
+pub mod config;
+
+#[cfg(test)]
+mod tests;
+
 pub use private::LiteClient;
 pub use private::Result;
 pub use private::DeserializeError;
@@ -18,8 +23,8 @@ mod private {
     use x25519_dalek::{StaticSecret};
     use adnl::{AdnlClient, AdnlBuilder};
     use std::convert::TryInto;
-    
-    
+    use crate::config::ConfigGlobal;
+
 
     #[derive(Debug)]
     pub struct DeserializeError {
@@ -64,12 +69,13 @@ mod private {
     }
 
     impl LiteClient {
-        pub fn connect(_config_json: &str) -> Result<Self> {
-            let remote_public: [u8; 32] = base64::decode("JhXt7H1dZTgxQTIyGiYV4f9VUARuDxFl/1kVBjLSMB8=")?.try_into().unwrap();
+        pub fn connect(config_json: &str) -> Result<Self> {
+            let config: ConfigGlobal = serde_json::from_str(config_json)?;
+            let ls = &config.liteservers[0];
             let local_secret = StaticSecret::new(rand::rngs::OsRng);
-            let transport = TcpStream::connect(SocketAddrV4::new("65.21.74.140".parse()?, 46427))?;
+            let transport = TcpStream::connect(ls.socket_addr())?;
             let client = AdnlBuilder::with_random_aes_params(&mut rand::rngs::OsRng)
-                .perform_ecdh(local_secret, remote_public)
+                .perform_ecdh(local_secret, ls.id.clone())
                 .perform_handshake(transport).map_err(|e| format!("{:?}", e))?;
             Ok(Self { client })
         }
