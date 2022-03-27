@@ -23,6 +23,7 @@ mod private {
     use x25519_dalek::{StaticSecret};
     use adnl::{AdnlClient, AdnlBuilder};
     use std::convert::TryInto;
+    use rand::prelude::SliceRandom;
     use crate::config::ConfigGlobal;
 
 
@@ -71,7 +72,7 @@ mod private {
     impl LiteClient {
         pub fn connect(config_json: &str) -> Result<Self> {
             let config: ConfigGlobal = serde_json::from_str(config_json)?;
-            let ls = &config.liteservers[0];
+            let ls = config.liteservers.choose(&mut rand::thread_rng()).unwrap();
             let local_secret = StaticSecret::new(rand::rngs::OsRng);
             let transport = TcpStream::connect(ls.socket_addr())?;
             let client = AdnlBuilder::with_random_aes_params(&mut rand::rngs::OsRng)
