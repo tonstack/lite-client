@@ -62,9 +62,9 @@ fn main() -> Result<()> {
         read_to_string(config)?
     } else {
         let url = if args.testnet {
-            "https://newton-blockchain.github.io/testnet-global.config.json"
+            "https://ton-blockchain.github.io/testnet-global.config.json"
         } else {
-            "https://newton-blockchain.github.io/global.config.json"
+            "https://ton-blockchain.github.io/global.config.json"
         };
         let response = ureq::get(url).call()
             .map_err(|e| format!("Error occurred while fetching config from {}: {:?}. Use --config if you have local config.", url, e))?;
