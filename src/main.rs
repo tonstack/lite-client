@@ -32,6 +32,10 @@ enum Commands {
     },
     /// Get time from liteserver
     GetTime,
+    /// Get version from liteserver
+    GetVersion,
+    /// Get masterchainInfo
+    GetMasterchainInfo,
 }
 
 fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
@@ -40,6 +44,14 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             let result = *client.get_time()?.now() as u64;
             let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
             println!("Current time: {} => {:?}", result, time);
+        }
+        Commands::GetVersion => {
+            let result = *client.get_version()?.version() as i32;
+            println!("Current version: {}", result);
+        }
+        Commands::GetMasterchainInfo => {
+            let result = *client.get_masterchain_info()?.last().seq_no as u32;
+            println!("Last Block: {}", result);
         }
         Commands::Send { file } => {
             let mut data = Vec::new();
