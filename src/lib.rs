@@ -13,9 +13,9 @@ mod private {
     
     use ton_api::ton::rpc::lite_server as lite_query;
     use ton_api::ton::{bytes, TLObject};
-    use ton_api::ton::lite_server as lite_result;
+    use ton_api::ton::lite_server::{self as lite_result, MasterchainInfo};
     use ton_api::ton::adnl as adnl_tl;
-    use ton_api::ton::rpc::lite_server::{GetTime, SendMessage};
+    use ton_api::ton::rpc::lite_server::{GetTime, SendMessage, GetVersion, GetMasterchainInfo};
     use pretty_hex::PrettyHex;
     use std::fmt::{Display, Formatter};
     use std::net::{SocketAddrV4, TcpStream};
@@ -102,9 +102,16 @@ mod private {
                     .unwrap_or_else(|o| Box::new(DeserializeError { object: o }).into())
             })
         }
+        pub fn get_masterchain_info(&mut self) -> Result<lite_result::MasterchainInfo> {
+            self.lite_query(GetMasterchainInfo)
+        }
 
         pub fn get_time(&mut self) -> Result<lite_result::CurrentTime> {
             self.lite_query(GetTime)
+        }
+
+        pub fn get_version(&mut self) -> Result<lite_result::Version> {
+            self.lite_query(GetVersion)
         }
 
         pub fn send_external_message(&mut self, message: Vec<u8>) -> Result<lite_result::SendMsgStatus> {
