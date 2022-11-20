@@ -1,8 +1,10 @@
 use std::error::Error;
 use std::fs::{read_to_string, File};
 use std::path::PathBuf;
+use std::str::FromStr;
 use liteclient::LiteClient;
 use clap::{Parser, Subcommand};
+use ton_block::BlockIdExt;
 use std::io::{Read, stdin};
 use chrono::{DateTime, Utc};
 use std::time::{Duration, UNIX_EPOCH};
@@ -36,6 +38,10 @@ enum Commands {
     GetVersion,
     /// Get masterchainInfo
     GetMasterchainInfo,
+    #[clap(arg_required_else_help = true)]
+    GetBlock {
+        id: String,
+    },
 }
 
 fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
@@ -50,7 +56,7 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             println!("Current version: {}", result);
         }
         Commands::GetMasterchainInfo => {
-            let result = *client.get_masterchain_info()?.last().seq_no as u32;
+            let result = (*client).get_masterchain_info()?.last().seq_no();
             println!("Last Block: {}", result);
         }
         Commands::Send { file } => {
@@ -60,8 +66,14 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             } else {
                 File::open(file)?.read_to_end(&mut data)?;
             }
-            let result = client.send_external_message(data)?;
+            let result = client.send_message(data)?;
             println!("result = {:?}", result);
+        }
+
+        // cargo run get-block "(-1:8000000000000000, 25123484, rh 7f43835181544d3721196153f912226625568035627bdc5df827c983a4965cae, fh 36d45897be235ddc69abca3d35007fcdd15a8fbff41eb91efc64307a9a2cb0c7)"
+        Commands::GetBlock {id} => {
+            let result = client.get_block(BlockIdExt::from_str(id.as_str())?)?;
+            println!("BlockData: {:?}", result);
         }
     };
     Ok(())
