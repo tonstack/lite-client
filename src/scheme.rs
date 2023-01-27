@@ -11,22 +11,7 @@ pub struct True;
 
 /// string ? = String;
 #[derive(TlWrite, TlRead)]
-pub struct String<'tl>(&'tl [u8]);
-
-/// boolTrue = Bool;
-/// boolFalse = Bool;
-#[derive(TlWrite, TlRead)]
-#[tl(boxed)]
-#[tl(scheme_inline = r##"
-    boolTrue = Bool;
-    boolFalse = Bool;
-"##)]
-pub enum Bool {
-    #[tl(id = "boolTrue")]
-    BoolTrue,
-    #[tl(id = "boolFalse")]
-    BoolFalse,
-}
+pub struct String(Vec<u8>);
 
 /// int128 4*[ int ] = Int128;
 #[derive(TlRead, TlWrite, Debug)]
@@ -36,6 +21,11 @@ pub struct Int128([u8; 16]);
 #[derive(TlRead, TlWrite, Debug)]
 pub struct Int256([u8; 32]);
 
+impl Int256 {
+    pub const fn with_array(data: [u8; 32]) -> Self {
+        Self(data)
+    }
+}
 impl FromStr for Int256 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Int256(<[u8; 32]>::from_hex(&s).unwrap()))
@@ -52,24 +42,6 @@ pub struct BlockId {
     shard: u64,
     seqno: u32,
 }
-// mod tl_shard {
-//     use tl_proto::{TlPacket, TlRead, TlWrite};
-
-//     pub const fn size_hint(_: &u64) -> usize { 8 }
-
-//     pub fn write<P: TlPacket>(shard: &u64, packet: &mut P) {
-//         shard.write_to(packet);
-//     }
-
-//     pub fn read(packet: &[u8], offset: &mut usize) -> tl_proto::TlResult<u64> {
-//         let shard = u64::read_from(packet, offset)?;
-//         if shard % 10000 == 0 {
-//             Ok(shard)
-//         } else {
-//             Err(tl_proto::TlError::InvalidData)
-//         }
-//     }
-// }
 
 /// tonNode.blockIdExt workchain:int shard:long seqno:int root_hash:int256 file_hash:int256 = tonNode.BlockIdExt;
 #[derive(TlRead, TlWrite)]
@@ -93,26 +65,26 @@ pub struct ZeroStateIdExt {
 
 #[derive(TlRead, TlWrite)]
 #[tl(boxed, scheme = "lite.tl")]
-pub enum Message<'tl> {
+pub enum Message {
     /// adnl.message.query query_id:int256 query:bytes = adnl.Message;
     #[tl(id = "adnl.message.query")]
     Query {
         query_id: Int256,
-        query: &'tl [u8],
+        query: Vec<u8>,
     },
     /// adnl.message.answer query_id:int256 answer:bytes = adnl.Message;
     #[tl(id = "adnl.message.answer")]
     Answer {
         query_id: Int256,
-        answer: &'tl [u8],
+        answer: Vec<u8>,
     },
 }
 
 /// liteServer.error code:int message:string = liteServer.Error; 
 #[derive(TlRead, TlWrite)]
-pub struct Error<'tl> {
+pub struct Error {
     code: i32,
-    message: String<'tl>,
+    message: String,
 }
 
 /// liteServer.accountId workchain:int id:int256 = liteServer.AccountId;
@@ -162,26 +134,26 @@ pub struct Version {
 
 /// liteServer.blockData id:tonNode.blockIdExt data:bytes = liteServer.BlockData;
 #[derive(TlRead, TlWrite)]
-pub struct BlockData<'tl> {
+pub struct BlockData {
     id: BlockIdExt,
-    data: &'tl [u8],
+    data: Vec<u8>,
 }
 
 /// liteServer.blockState id:tonNode.blockIdExt root_hash:int256 file_hash:int256 data:bytes = liteServer.BlockState;
 #[derive(TlRead, TlWrite)]
-pub struct BlockState<'tl> {
+pub struct BlockState {
     id: BlockIdExt,
     root_hash: Int256,
     file_hash: Int256,
-    data: &'tl [u8],
+    data: Vec<u8>,
 }
 
 /// liteServer.blockHeader id:tonNode.blockIdExt mode:# header_proof:bytes = liteServer.BlockHeader;
 #[derive(TlRead, TlWrite)]
-pub struct BlockHeader<'tl> {
+pub struct BlockHeader {
     id: BlockIdExt,
     mode: i32,
-    header_proof: &'tl [u8],
+    header_proof: Vec<u8>,
 }
 
 /// liteServer.sendMsgStatus status:int = liteServer.SendMsgStatus;
@@ -192,66 +164,66 @@ pub struct SendMsgStatus {
 
 /// liteServer.accountState id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:bytes proof:bytes state:bytes = liteServer.AccountState;
 #[derive(TlRead, TlWrite)]
-pub struct AccountState<'tl> {
+pub struct AccountState {
     id: BlockIdExt,
     shardblk: BlockIdExt,
-    shard_proof: &'tl [u8],
-    proof: &'tl [u8],
-    state: &'tl [u8],
+    shard_proof: Vec<u8>,
+    proof: Vec<u8>,
+    state: Vec<u8>,
 }
 
 /// liteServer.runMethodResult mode:# id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:mode.0?bytes proof:mode.0?bytes state_proof:mode.1?bytes init_c7:mode.3?bytes lib_extras:mode.4?bytes exit_code:int result:mode.2?bytes = liteServer.RunMethodResult;
 #[derive(TlRead, TlWrite)]
-pub struct RunMethodResult<'tl> {
+pub struct RunMethodResult {
     #[tl(flags)]
     mode: (),
     id: BlockIdExt,
     shardblk: BlockIdExt,
     #[tl(flags_bit = "mode.0")]
-    shard_proof: Option<&'tl [u8]>,
+    shard_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.0")]
-    proof: Option<&'tl [u8]>,
+    proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.1")]
-    state_proof: Option<&'tl [u8]>,
+    state_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.3")]
-    init_c7: Option<&'tl [u8]>,
+    init_c7: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.4")]
-    lib_extras: Option<&'tl [u8]>,
+    lib_extras: Option<Vec<u8>>,
     exit_code: i32,
     #[tl(flags_bit = "mode.2")]
-    result: Option<&'tl [u8]>,
+    result: Option<Vec<u8>>,
 }
 
 /// liteServer.shardInfo id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:bytes shard_descr:bytes = liteServer.ShardInfo;
 #[derive(TlRead, TlWrite)]
-pub struct ShardInfo<'tl> {
+pub struct ShardInfo {
     id: BlockIdExt,
     shardblk: BlockIdExt,
-    shard_proof: &'tl [u8],
-    shard_descr: &'tl [u8],
+    shard_proof: Vec<u8>,
+    shard_descr: Vec<u8>,
 }
 
 /// liteServer.allShardsInfo id:tonNode.blockIdExt proof:bytes data:bytes = liteServer.AllShardsInfo;
 #[derive(TlRead, TlWrite)]
-pub struct AllShardsInfo<'tl> {
+pub struct AllShardsInfo {
     id: BlockIdExt,
-    proof: &'tl [u8],
-    data: &'tl [u8],
+    proof: Vec<u8>,
+    data: Vec<u8>,
 }
 
 /// liteServer.transactionInfo id:tonNode.blockIdExt proof:bytes transaction:bytes = liteServer.TransactionInfo;
 #[derive(TlRead, TlWrite)]
-pub struct TransactionInfo<'tl> {
+pub struct TransactionInfo {
     id: BlockIdExt,
-    proof: &'tl [u8],
-    transaction: &'tl [u8],
+    proof: Vec<u8>,
+    transaction: Vec<u8>,
 }
 
 /// liteServer.transactionList ids:(vector tonNode.blockIdExt) transactions:bytes = liteServer.TransactionList;
 #[derive(TlRead, TlWrite)]
-pub struct TransactionList<'tl> {
+pub struct TransactionList {
     ids: Vec<BlockIdExt>,
-    transactions: &'tl [u8],
+    transactions: Vec<u8>,
 }
 
 /// liteServer.transactionId mode:# account:mode.0?int256 lt:mode.1?long hash:mode.2?int256 = liteServer.TransactionId;
@@ -276,84 +248,84 @@ pub struct TransactionId3 {
 
 /// liteServer.blockTransactions id:tonNode.blockIdExt req_count:# incomplete:Bool ids:(vector liteServer.transactionId) proof:bytes = liteServer.BlockTransactions;
 #[derive(TlRead, TlWrite)]
-pub struct BlockTransactions<'tl> {
+pub struct BlockTransactions {
     id: BlockIdExt,
     #[tl(flags)]
     req_count: (),
-    inclomplete: Bool,
+    inclomplete: bool,
     ids: Vec<TransactionId>,
-    proof: &'tl [u8],
+    proof: Vec<u8>,
 }
 
 /// liteServer.signature node_id_short:int256 signature:bytes = liteServer.Signature;
 #[derive(TlRead, TlWrite)]
-pub struct Signature<'tl> {
+pub struct Signature {
     node_id_short: Int256,
-    signature: &'tl [u8],
+    signature: Vec<u8>,
 }
 
 /// liteServer.signatureSet validator_set_hash:int catchain_seqno:int signatures:(vector liteServer.signature) = liteServer.SignatureSet;
 #[derive(TlRead, TlWrite)]
-pub struct SignatureSet<'tl> {
+pub struct SignatureSet {
     validator_set_hash: i32,
     catchain_seqno: i32,
-    signatures: Vec<Signature<'tl>>,
+    signatures: Vec<Signature>,
 }
 
 #[derive(TlRead, TlWrite)]
 #[tl(boxed, scheme = "lite.tl")]
-pub enum BlockLink<'tl> {
+pub enum BlockLink {
     /// liteServer.blockLinkBack to_key_block:Bool from:tonNode.blockIdExt to:tonNode.blockIdExt dest_proof:bytes proof:bytes state_proof:bytes = liteServer.BlockLink;
     #[tl(id = "liteServer.blockLinkBack")]
     BlockLinkBack {
-        to_key_block: Bool,
+        to_key_block: bool,
         from: BlockIdExt,
         to: BlockIdExt,
-        dest_proof: &'tl [u8],
-        proof: &'tl [u8],
-        state_proof:&'tl [u8],
+        dest_proof: Vec<u8>,
+        proof: Vec<u8>,
+        state_proof:Vec<u8>,
     },
     /// liteServer.blockLinkForward to_key_block:Bool from:tonNode.blockIdExt to:tonNode.blockIdExt dest_proof:bytes config_proof:bytes signatures:liteServer.SignatureSet = liteServer.BlockLink;
     #[tl(id = "liteServer.blockLinkForward")]
     BlockLinkForward {
-        to_key_block: Bool,
+        to_key_block: bool,
         from: BlockIdExt,
         to: BlockIdExt,
-        dest_proof: &'tl [u8],
-        config_proof: &'tl [u8],
-        signatures: SignatureSet<'tl>,
+        dest_proof: Vec<u8>,
+        config_proof: Vec<u8>,
+        signatures: SignatureSet,
     }
 }
 
 /// liteServer.partialBlockProof complete:Bool from:tonNode.blockIdExt to:tonNode.blockIdExt steps:(vector liteServer.BlockLink) = liteServer.PartialBlockProof;
 #[derive(TlRead, TlWrite)]
-pub struct PartialBlockProof<'tl> {
-    complete: Bool,
+pub struct PartialBlockProof {
+    complete: bool,
     from: BlockIdExt,
     to: BlockIdExt,
-    steps: Vec<BlockLink<'tl>>,
+    steps: Vec<BlockLink>,
 }
 
 /// liteServer.configInfo mode:# id:tonNode.blockIdExt state_proof:bytes config_proof:bytes = liteServer.ConfigInfo;
 #[derive(TlRead, TlWrite)]
-pub struct ConfigInfo<'tl> {
+pub struct ConfigInfo {
     #[tl(flags)]
     mode: (),
     id: BlockIdExt,
-    state_proof: &'tl [u8],
-    config_proof: &'tl [u8],
+    state_proof: Vec<u8>,
+    config_proof: Vec<u8>,
 }
 
 /// liteServer.validatorStats mode:# id:tonNode.blockIdExt count:int complete:Bool state_proof:bytes data_proof:bytes = liteServer.ValidatorStats;
 #[derive(TlRead, TlWrite)]
-pub struct ValidatorStats<'tl> {
+pub struct ValidatorStats {
     #[tl(flags)]
     mode: (),
     id: BlockIdExt,
     count: i32,
-    complete: Bool,
-    state_proof: &'tl [u8],
-    data_proof: &'tl [u8],
+    complete: bool,
+    state_proof: Vec<u8>,
+    data_proof: Vec<u8>,
 }
 
 /// liteServer.debug.verbosity value:int = liteServer.debug.Verbosity;
@@ -410,8 +382,8 @@ pub struct GetBlockHeader {
 /// liteServer.sendMessage body:bytes = liteServer.SendMsgStatus;
 #[derive(TlRead, TlWrite)]
 #[tl(boxed, id = "liteServer.sendMessage", scheme = "lite.tl")]
-pub struct SendMessage<'tl> {
-    body: &'tl [u8],
+pub struct SendMessage {
+    body: Vec<u8>,
 }
 
 /// liteServer.getAccountState id:tonNode.blockIdExt account:liteServer.accountId = liteServer.AccountState;
@@ -425,13 +397,13 @@ pub struct GetAccountState {
 /// liteServer.runSmcMethod mode:# id:tonNode.blockIdExt account:liteServer.accountId method_id:long params:bytes = liteServer.RunMethodResult;
 #[derive(TlRead, TlWrite)]
 #[tl(boxed, id = "liteServer.runSmcMethod", scheme = "lite.tl")]
-pub struct RunSmcMethod<'tl> {
+pub struct RunSmcMethod {
     #[tl(flags)]
     mode: (),
     id: BlockIdExt,
     account: AccountId,
     method_id: i64,
-    params: &'tl [u8],
+    params: Vec<u8>,
 }
 
 /// liteServer.getShardInfo id:tonNode.blockIdExt workchain:int shard:long exact:Bool = liteServer.ShardInfo;
@@ -441,7 +413,7 @@ pub struct GetShardInfo {
     id: BlockIdExt,
     workchain: i32,
     shard: i64,
-    exact: Bool,
+    exact: bool,
 }
 /// liteServer.getAllShardsInfo id:tonNode.blockIdExt = liteServer.AllShardsInfo;
 #[derive(TlRead, TlWrite)]
@@ -576,5 +548,9 @@ mod tests {
         let _check: [u8; 32] = [127, 67, 131, 81, 129, 84, 77, 55, 33, 25, 97, 83, 249, 18, 34, 102, 37, 86, 128, 53, 98, 123, 220, 93, 248, 39, 201, 131, 164, 150, 92, 174];
         assert!(matches!(tl_proto::serialize(Int256(encoded_hash)), _check));
     }
+    // #[test]
+    // fn blockId_test() {
+    //     let 
+    // }
 }
 
