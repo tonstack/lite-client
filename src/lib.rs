@@ -20,7 +20,7 @@ mod private {
     use rand::prelude::SliceRandom;
     use crate::config::ConfigGlobal;
     use crate::scheme;
-    use tl_proto::{TlWrite, BoxedConstructor, Bare, TlResult, TlRead, BoxedWrapper};
+    use tl_proto::{TlWrite, Bare, TlResult, TlRead};
 
 
     #[derive(Debug)]
@@ -76,10 +76,10 @@ mod private {
                 .perform_handshake(transport).map_err(|e| format!("{:?}", e))?;
             Ok(Self { client })
         }
-        pub fn lite_query<'tl, T, U>(&mut self, request: T, answer: &'tl mut Vec<u8>) -> TlResult<U> 
+        pub fn lite_query<'tl, T, U>(&mut self, request: T, response: &'tl mut Vec<u8>) -> TlResult<U> 
         where 
             T: TlWrite,
-            U: TlRead<'tl, Repr = Bare> + BoxedConstructor 
+            U: TlRead<'tl, Repr = Bare> 
         {
             let mut message = tl_proto::serialize(scheme::Message::Query { 
                 query_id: (scheme::Int256::with_array(rand::random())), 
@@ -89,15 +89,27 @@ mod private {
             log::debug!("Sending query:\n{:?}", &message.hex_dump());
             self.client.send(&mut message, &mut rand::random())
                 .map_err(|e| format!("{:?}", e)).unwrap();
-            self.client.receive::<_, 8192>(answer)
+            log::debug!("Query sent");
+            self.client.receive::<_, 8192>(response)
                 .map_err(|e| format!("{:?}", e)).unwrap();
-            log::debug!("Received:\n{:?}", &answer.hex_dump());
-            let BoxedWrapper::<U>(data) = tl_proto::deserialize(answer).unwrap();
-            Ok(data)
-            // if let scheme::Message::Answer { query_id: _, answer } = result {
-            //     // tl_proto::deserialize::<U>(&answer)
-            // }
-            // else {panic!();}
+            log::debug!("Received:\n{:?}", &response.hex_dump());
+            let data = tl_proto::deserialize::<scheme::Message>(response).unwrap();
+            // Ok(data)
+            if let scheme::Message::Answer { query_id: _, answer} = data {
+                *response = answer;
+            }
+            else {panic!();}
+            tl_proto::deserialize::<U>(response)
+        }
+
+        pub fn get_masterchain_info(&mut self) -> TlResult<scheme::MasterchainInfo> {
+            let  mut response = Vec::<u8>::new();
+            self.lite_query(scheme::GetMasterchainInfo, &mut response) as TlResult<scheme::MasterchainInfo> 
+        }
+
+        pub fn get_version(&mut self) -> TlResult<scheme::Version> {
+            let  mut response = Vec::<u8>::new();
+            self.lite_query(scheme::GetVersion, &mut response) as TlResult<scheme::Version> 
         }
 
         // pub fn get_masterchain_info(&mut self) -> Result<lite_result::MasterchainInfo> {

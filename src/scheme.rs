@@ -5,12 +5,12 @@ use std::str::FromStr;
 use hex::{FromHex, FromHexError};
 
 /// true = True;
-#[derive(TlWrite, TlRead)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "true", scheme = "lite.tl")]
 pub struct True;
 
 /// string ? = String;
-#[derive(TlWrite, TlRead)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct String(Vec<u8>);
 
 /// int128 4*[ int ] = Int128;
@@ -35,7 +35,7 @@ impl FromStr for Int256 {
 }
 
 /// tonNode.blockId workchain:int shard:long seqno:int = tonNode.BlockId;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct BlockId {
     workchain: i32,
     // #[tl(with = "tl_shard")]
@@ -44,7 +44,7 @@ pub struct BlockId {
 }
 
 /// tonNode.blockIdExt workchain:int shard:long seqno:int root_hash:int256 file_hash:int256 = tonNode.BlockIdExt;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct BlockIdExt {
     workchain: i32,
     shard: u64,
@@ -54,7 +54,7 @@ pub struct BlockIdExt {
 }
 
 /// tonNode.zeroStateIdExt workchain:int root_hash:int256 file_hash:int256 = tonNode.ZeroStateIdExt;
-#[derive(TlRead, TlWrite)] 
+#[derive(TlRead, TlWrite, Debug)] 
 pub struct ZeroStateIdExt {
     workchain: i32,
     #[tl(size_hint = 32)]
@@ -63,7 +63,7 @@ pub struct ZeroStateIdExt {
     file_hash: Int256,
 }
 
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, scheme = "lite.tl")]
 pub enum Message {
     /// adnl.message.query query_id:int256 query:bytes = adnl.Message;
@@ -81,21 +81,21 @@ pub enum Message {
 }
 
 /// liteServer.error code:int message:string = liteServer.Error; 
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct Error {
     code: i32,
     message: String,
 }
 
 /// liteServer.accountId workchain:int id:int256 = liteServer.AccountId;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct AccountId {
     workchain: i32,
     id: Int256,
 }
 
 /// liteServer.masterchainInfo last:tonNode.blockIdExt state_root_hash:int256 init:tonNode.zeroStateIdExt = liteServer.MasterchainInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct MasterchainInfo {
     last: BlockIdExt,
     state_root_hash: Int256,
@@ -103,7 +103,7 @@ pub struct MasterchainInfo {
 }
 
 /// liteServer.masterchainInfoExt mode:# version:int capabilities:long last:tonNode.blockIdExt last_utime:int now:int state_root_hash:int256 init:tonNode.zeroStateIdExt = liteServer.MasterchainInfoExt;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct MasterchainInfoExt {
     #[tl(flags)]
     mode: (),
@@ -117,13 +117,14 @@ pub struct MasterchainInfoExt {
 }
 
 /// liteServer.currentTime now:int = liteServer.CurrentTime;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct CurrentTime {
     now: i32,
 }
 
 /// liteServer.version mode:# version:int capabilities:long now:int = liteServer.Version;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
+// #[tl(boxed, id = "liteServer.version", scheme = "lite.tl")]
 pub struct Version {
     #[tl(flags)]
     mode: (),
@@ -133,14 +134,14 @@ pub struct Version {
 }
 
 /// liteServer.blockData id:tonNode.blockIdExt data:bytes = liteServer.BlockData;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct BlockData {
     id: BlockIdExt,
     data: Vec<u8>,
 }
 
 /// liteServer.blockState id:tonNode.blockIdExt root_hash:int256 file_hash:int256 data:bytes = liteServer.BlockState;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct BlockState {
     id: BlockIdExt,
     root_hash: Int256,
@@ -149,7 +150,7 @@ pub struct BlockState {
 }
 
 /// liteServer.blockHeader id:tonNode.blockIdExt mode:# header_proof:bytes = liteServer.BlockHeader;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct BlockHeader {
     id: BlockIdExt,
     mode: i32,
@@ -157,13 +158,13 @@ pub struct BlockHeader {
 }
 
 /// liteServer.sendMsgStatus status:int = liteServer.SendMsgStatus;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct SendMsgStatus {
     status: i32,
 }
 
 /// liteServer.accountState id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:bytes proof:bytes state:bytes = liteServer.AccountState;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct AccountState {
     id: BlockIdExt,
     shardblk: BlockIdExt,
@@ -173,7 +174,7 @@ pub struct AccountState {
 }
 
 /// liteServer.runMethodResult mode:# id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:mode.0?bytes proof:mode.0?bytes state_proof:mode.1?bytes init_c7:mode.3?bytes lib_extras:mode.4?bytes exit_code:int result:mode.2?bytes = liteServer.RunMethodResult;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct RunMethodResult {
     #[tl(flags)]
     mode: (),
@@ -195,7 +196,7 @@ pub struct RunMethodResult {
 }
 
 /// liteServer.shardInfo id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:bytes shard_descr:bytes = liteServer.ShardInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct ShardInfo {
     id: BlockIdExt,
     shardblk: BlockIdExt,
@@ -204,7 +205,7 @@ pub struct ShardInfo {
 }
 
 /// liteServer.allShardsInfo id:tonNode.blockIdExt proof:bytes data:bytes = liteServer.AllShardsInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct AllShardsInfo {
     id: BlockIdExt,
     proof: Vec<u8>,
@@ -212,7 +213,7 @@ pub struct AllShardsInfo {
 }
 
 /// liteServer.transactionInfo id:tonNode.blockIdExt proof:bytes transaction:bytes = liteServer.TransactionInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct TransactionInfo {
     id: BlockIdExt,
     proof: Vec<u8>,
@@ -220,14 +221,14 @@ pub struct TransactionInfo {
 }
 
 /// liteServer.transactionList ids:(vector tonNode.blockIdExt) transactions:bytes = liteServer.TransactionList;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct TransactionList {
     ids: Vec<BlockIdExt>,
     transactions: Vec<u8>,
 }
 
 /// liteServer.transactionId mode:# account:mode.0?int256 lt:mode.1?long hash:mode.2?int256 = liteServer.TransactionId;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct TransactionId {
     #[tl(flags)]
     mode: (),
@@ -240,14 +241,14 @@ pub struct TransactionId {
 }
 
 /// liteServer.transactionId3 account:int256 lt:long = liteServer.TransactionId3;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct TransactionId3 {
     account: Int256,
     lt: i64,
 }
 
 /// liteServer.blockTransactions id:tonNode.blockIdExt req_count:# incomplete:Bool ids:(vector liteServer.transactionId) proof:bytes = liteServer.BlockTransactions;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct BlockTransactions {
     id: BlockIdExt,
     #[tl(flags)]
@@ -258,21 +259,21 @@ pub struct BlockTransactions {
 }
 
 /// liteServer.signature node_id_short:int256 signature:bytes = liteServer.Signature;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct Signature {
     node_id_short: Int256,
     signature: Vec<u8>,
 }
 
 /// liteServer.signatureSet validator_set_hash:int catchain_seqno:int signatures:(vector liteServer.signature) = liteServer.SignatureSet;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct SignatureSet {
     validator_set_hash: i32,
     catchain_seqno: i32,
     signatures: Vec<Signature>,
 }
 
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, scheme = "lite.tl")]
 pub enum BlockLink {
     /// liteServer.blockLinkBack to_key_block:Bool from:tonNode.blockIdExt to:tonNode.blockIdExt dest_proof:bytes proof:bytes state_proof:bytes = liteServer.BlockLink;
@@ -298,7 +299,7 @@ pub enum BlockLink {
 }
 
 /// liteServer.partialBlockProof complete:Bool from:tonNode.blockIdExt to:tonNode.blockIdExt steps:(vector liteServer.BlockLink) = liteServer.PartialBlockProof;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct PartialBlockProof {
     complete: bool,
     from: BlockIdExt,
@@ -307,7 +308,7 @@ pub struct PartialBlockProof {
 }
 
 /// liteServer.configInfo mode:# id:tonNode.blockIdExt state_proof:bytes config_proof:bytes = liteServer.ConfigInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct ConfigInfo {
     #[tl(flags)]
     mode: (),
@@ -317,7 +318,7 @@ pub struct ConfigInfo {
 }
 
 /// liteServer.validatorStats mode:# id:tonNode.blockIdExt count:int complete:Bool state_proof:bytes data_proof:bytes = liteServer.ValidatorStats;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct ValidatorStats {
     #[tl(flags)]
     mode: (),
@@ -329,7 +330,7 @@ pub struct ValidatorStats {
 }
 
 /// liteServer.debug.verbosity value:int = liteServer.debug.Verbosity;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 pub struct Verbosity {
     value: i32,
 }
@@ -337,41 +338,41 @@ pub struct Verbosity {
 /// Functions
 
 /// liteServer.getMasterchainInfo = liteServer.MasterchainInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getMasterchainInfo", scheme = "lite.tl")]
 pub struct GetMasterchainInfo;
 
 /// liteServer.getMasterchainInfoExt mode:# = liteServer.MasterchainInfoExt;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getMasterchainInfoExt", scheme = "lite.tl")]
 pub struct GetMasterchainInfoExt;
 
 /// liteServer.getTime = liteServer.CurrentTime;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getTime", scheme = "lite.tl")]
 pub struct GetTime;
 
 /// liteServer.getVersion = liteServer.Version;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getVersion", scheme = "lite.tl")]
 pub struct GetVersion;
 
 /// liteServer.getBlock id:tonNode.blockIdExt = liteServer.BlockData;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getBlock", scheme = "lite.tl")]
 pub struct GetBlock {
     id: BlockIdExt,
 }
 
 /// liteServer.getState id:tonNode.blockIdExt = liteServer.BlockState;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getState", scheme = "lite.tl")]
 pub struct GetState {
     id: BlockIdExt,
 }
 
 /// liteServer.getBlockHeader id:tonNode.blockIdExt mode:# = liteServer.BlockHeader;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getBlockHeader", scheme = "lite.tl")]
 pub struct GetBlockHeader {
     id: BlockIdExt,
@@ -380,14 +381,14 @@ pub struct GetBlockHeader {
 }
 
 /// liteServer.sendMessage body:bytes = liteServer.SendMsgStatus;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.sendMessage", scheme = "lite.tl")]
 pub struct SendMessage {
     body: Vec<u8>,
 }
 
 /// liteServer.getAccountState id:tonNode.blockIdExt account:liteServer.accountId = liteServer.AccountState;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getAccountState", scheme = "lite.tl")]
 pub struct GetAccountState {
     id: BlockIdExt,
@@ -395,7 +396,7 @@ pub struct GetAccountState {
 }
 
 /// liteServer.runSmcMethod mode:# id:tonNode.blockIdExt account:liteServer.accountId method_id:long params:bytes = liteServer.RunMethodResult;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.runSmcMethod", scheme = "lite.tl")]
 pub struct RunSmcMethod {
     #[tl(flags)]
@@ -407,7 +408,7 @@ pub struct RunSmcMethod {
 }
 
 /// liteServer.getShardInfo id:tonNode.blockIdExt workchain:int shard:long exact:Bool = liteServer.ShardInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getShardInfo", scheme = "lite.tl")]
 pub struct GetShardInfo {
     id: BlockIdExt,
@@ -416,14 +417,14 @@ pub struct GetShardInfo {
     exact: bool,
 }
 /// liteServer.getAllShardsInfo id:tonNode.blockIdExt = liteServer.AllShardsInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getAllShardsInfo", scheme = "lite.tl")]
 pub struct GetAllShardsInfo {
     id: BlockIdExt,
 }
 
 /// liteServer.getOneTransaction id:tonNode.blockIdExt account:liteServer.accountId lt:long = liteServer.TransactionInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getOneTransaction", scheme = "lite.tl")]
 pub struct GetOneTransaction {
     id: BlockIdExt,
@@ -432,7 +433,7 @@ pub struct GetOneTransaction {
 }
 
 /// liteServer.getTransactions count:# account:liteServer.accountId lt:long hash:int256 = liteServer.TransactionList;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getTransactions", scheme = "lite.tl")]
 pub struct GetTransactions {
     #[tl(flags)]
@@ -443,7 +444,7 @@ pub struct GetTransactions {
 }
 
 /// liteServer.lookupBlock mode:# id:tonNode.blockId lt:mode.1?long utime:mode.2?int = liteServer.BlockHeader;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.lookupBlock", scheme = "lite.tl")]
 pub struct LookupBlock {
     #[tl(flags)]
@@ -456,7 +457,7 @@ pub struct LookupBlock {
 }
 
 /// liteServer.listBlockTransactions id:tonNode.blockIdExt mode:# count:# after:mode.7?liteServer.transactionId3 reverse_order:mode.6?true want_proof:mode.5?true = liteServer.BlockTransactions;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.listBlockTransactions", scheme = "lite.tl")]
 pub struct ListBlockTransactions {
     id: BlockIdExt,
@@ -473,7 +474,7 @@ pub struct ListBlockTransactions {
 }
 
 /// liteServer.getBlockProof mode:# known_block:tonNode.blockIdExt target_block:mode.0?tonNode.blockIdExt = liteServer.PartialBlockProof;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getBlockProof", scheme = "lite.tl")]
 pub struct GetBlockProof {
     #[tl(flags)]
@@ -484,7 +485,7 @@ pub struct GetBlockProof {
 }
 
 /// liteServer.getConfigAll mode:# id:tonNode.blockIdExt = liteServer.ConfigInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getConfigAll", scheme = "lite.tl")]
 pub struct GetConfigAll {
     #[tl(flags)]
@@ -493,7 +494,7 @@ pub struct GetConfigAll {
 }
 
 /// liteServer.getConfigParams mode:# id:tonNode.blockIdExt param_list:(vector int) = liteServer.ConfigInfo;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = "liteServer.getConfigParams", scheme = "lite.tl")]
 pub struct GetConfigParams {
     #[tl(flags)]
@@ -503,7 +504,7 @@ pub struct GetConfigParams {
 }
 
 /// liteServer.getValidatorStats#091a58bc mode:# id:tonNode.blockIdExt limit:int start_after:mode.0?int256 modified_after:mode.2?int = liteServer.ValidatorStats;
-#[derive(TlRead, TlWrite)]
+#[derive(TlRead, TlWrite, Debug)]
 #[tl(boxed, id = 0x091a58bc)]
 pub struct GetValidatorStats {
     #[tl(flags)]
