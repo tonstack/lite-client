@@ -83,7 +83,7 @@ mod private {
         {
             let mut message = tl_proto::serialize(scheme::Message::Query { 
                 query_id: (scheme::Int256::with_array(rand::random())), 
-                query: (tl_proto::serialize(request)) 
+                query: (tl_proto::serialize(scheme::Query{data: (tl_proto::serialize(request))})) 
             });
             
             log::debug!("Sending query:\n{:?}", &message.hex_dump());

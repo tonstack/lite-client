@@ -11,7 +11,7 @@ pub struct True;
 
 /// string ? = String;
 #[derive(TlRead, TlWrite, Debug)]
-pub struct String(Vec<u8>);
+pub struct String(pub Vec<u8>);
 
 /// int128 4*[ int ] = Int128;
 #[derive(TlRead, TlWrite, Debug)]
@@ -33,6 +33,11 @@ impl FromStr for Int256 {
 
     type Err = FromHexError;
 }
+
+/// bytes data:string = Bytes;
+#[derive(TlRead, TlWrite, Debug)]
+#[tl(boxed, id = "bytes", scheme = "lite.tl")]
+pub struct Bytes{pub data:String}
 
 /// tonNode.blockId workchain:int shard:long seqno:int = tonNode.BlockId;
 #[derive(TlRead, TlWrite, Debug)]
@@ -518,6 +523,10 @@ pub struct GetValidatorStats {
 
 }
 
+/// liteServer.query data:bytes = Object;
+#[derive(TlRead, TlWrite, Debug)]
+#[tl(boxed, id = "liteServer.query", scheme = "lite.tl")]
+pub struct Query{pub data: Vec<u8>}
 
 
 #[cfg(test)]
