@@ -1,133 +1,28 @@
-#![allow(dead_code)]
-
-use tl_proto::{TlRead, TlWrite};
-use std::str::FromStr;
-use hex::{FromHex, FromHexError};
-use derivative::Derivative;
-use std::string::ToString;
-
-/// true = True;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-#[tl(boxed, id = "true", scheme = "lite.tl")]
-pub struct True;
-
-/// string ? = String;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-pub struct String(Vec<u8>);
-
-/// int128 4*[ int ] = Int128;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-pub struct Int128(pub [u8; 16]);
-impl FromStr for Int128 {
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Int128(<[u8; 16]>::from_hex(&s).unwrap()))
-    }
-    type Err = FromHexError;
-}
-impl ToString for Int128 {
-    fn to_string(&self) -> std::string::String {
-        hex::encode(self.0)
-    }
-}
-
-/// int256 8*[ int ] = Int256;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-pub struct Int256(pub [u8; 32]);
-impl FromStr for Int256 {
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Int256(<[u8; 32]>::from_hex(&s).unwrap()))
-    }
-    type Err = FromHexError;
-}
-impl ToString for Int256 {
-    fn to_string(&self) -> std::string::String {
-        hex::encode(self.0)
-    }
-}
-
-/// bytes data:string = Bytes;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-#[tl(boxed, id = "bytes", scheme = "lite.tl")]
-pub struct Bytes{pub data:String}
-
-/// tonNode.blockId workchain:int shard:long seqno:int = tonNode.BlockId;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-pub struct BlockId {
-    pub workchain: i32,
-    // #[tl(with = "tl_shard")]
-    pub shard: u64,
-    pub seqno: u32,
-}
-
-/// tonNode.blockIdExt workchain:int shard:long seqno:int root_hash:int256 file_hash:int256 = tonNode.BlockIdExt;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-pub struct BlockIdExt {
-    pub workchain: i32,
-    pub shard: u64,
-    pub seqno: u32,
-    pub root_hash: Int256,
-    pub file_hash: Int256,
-}
-
-/// tonNode.zeroStateIdExt workchain:int root_hash:int256 file_hash:int256 = tonNode.ZeroStateIdExt;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)] 
-pub struct ZeroStateIdExt {
-    pub workchain: i32,
-    #[tl(size_hint = 32)]
-    pub root_hash: Int256,
-    #[tl(size_hint = 32)]
-    pub file_hash: Int256,
-}
-
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-#[tl(boxed, scheme = "lite.tl")]
-pub enum Message {
-    /// adnl.message.query query_id:int256 query:bytes = adnl.Message;
-    #[tl(id = "adnl.message.query")]
-    Query {
-        query_id: Int256,
-        query: Vec<u8>,
-    },
-    /// adnl.message.answer query_id:int256 answer:bytes = adnl.Message;
-    #[tl(id = "adnl.message.answer")]
-    Answer {
-        query_id: Int256,
-        answer: Vec<u8>,
-    },
-}
-
+import re
+str = """
 /// liteServer.error code:int message:string = liteServer.Error; 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Error {
-    pub code: i32,
-    pub message: String,
+    code: i32,
+    message: String,
 }
 
 /// liteServer.accountId workchain:int id:int256 = liteServer.AccountId;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct AccountId {
-    pub workchain: i32,
-    pub id: Int256,
+    workchain: i32,
+    id: Int256,
 }
 
 /// liteServer.masterchainInfo last:tonNode.blockIdExt state_root_hash:int256 init:tonNode.zeroStateIdExt = liteServer.MasterchainInfo;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct MasterchainInfo {
-    pub last: BlockIdExt,
-    pub state_root_hash: Int256,
-    pub init: ZeroStateIdExt,
+    last: BlockIdExt,
+    state_root_hash: Int256,
+    init: ZeroStateIdExt,
 }
 
 /// liteServer.masterchainInfoExt mode:# version:int capabilities:long last:tonNode.blockIdExt last_utime:int now:int state_root_hash:int256 init:tonNode.zeroStateIdExt = liteServer.MasterchainInfoExt;
@@ -135,22 +30,21 @@ pub struct MasterchainInfo {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct MasterchainInfoExt {
     #[tl(flags)]
-    pub mode: (),
-    pub version: i32,
-    pub capabilities: i64,
-    pub last: BlockIdExt,
-    pub last_utime: i32,
-    pub now: i32,
-    pub state_root_hash: Int256,
-    pub init: ZeroStateIdExt,
+    mode: (),
+    version: i32,
+    capabilities: i64,
+    last: BlockIdExt,
+    last_utime: i32,
+    now: i32,
+    state_root_hash: Int256,
+    init: ZeroStateIdExt,
 }
 
 /// liteServer.currentTime now:int = liteServer.CurrentTime;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
-#[tl(boxed, id = "liteServer.currentTime", scheme = "lite.tl")]
 pub struct CurrentTime {
-    pub now: i32,
+    now: i32,
 }
 
 /// liteServer.version mode:# version:int capabilities:long now:int = liteServer.Version;
@@ -159,55 +53,55 @@ pub struct CurrentTime {
 // #[tl(boxed, id = "liteServer.version", scheme = "lite.tl")]
 pub struct Version {
     #[tl(flags)]
-    pub mode: (),
-    pub version: i32,
-    pub capabilities: i64,
-    pub now: i32,
+    mode: (),
+    version: i32,
+    capabilities: i64,
+    now: i32,
 }
 
 /// liteServer.blockData id:tonNode.blockIdExt data:bytes = liteServer.BlockData;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockData {
-    pub id: BlockIdExt,
-    pub data: Vec<u8>,
+    id: BlockIdExt,
+    data: Vec<u8>,
 }
 
 /// liteServer.blockState id:tonNode.blockIdExt root_hash:int256 file_hash:int256 data:bytes = liteServer.BlockState;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockState {
-    pub id: BlockIdExt,
-    pub root_hash: Int256,
-    pub file_hash: Int256,
-    pub data: Vec<u8>,
+    id: BlockIdExt,
+    root_hash: Int256,
+    file_hash: Int256,
+    data: Vec<u8>,
 }
 
 /// liteServer.blockHeader id:tonNode.blockIdExt mode:# header_proof:bytes = liteServer.BlockHeader;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockHeader {
-    pub id: BlockIdExt,
-    pub mode: i32,
-    pub header_proof: Vec<u8>,
+    id: BlockIdExt,
+    mode: i32,
+    header_proof: Vec<u8>,
 }
 
 /// liteServer.sendMsgStatus status:int = liteServer.SendMsgStatus;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct SendMsgStatus {
-    pub status: i32,
+    status: i32,
 }
 
 /// liteServer.accountState id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:bytes proof:bytes state:bytes = liteServer.AccountState;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct AccountState {
-    pub id: BlockIdExt,
-    pub shardblk: BlockIdExt,
-    pub shard_proof: Vec<u8>,
-    pub proof: Vec<u8>,
-    pub state: Vec<u8>,
+    id: BlockIdExt,
+    shardblk: BlockIdExt,
+    shard_proof: Vec<u8>,
+    proof: Vec<u8>,
+    state: Vec<u8>,
 }
 
 /// liteServer.runMethodResult mode:# id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:mode.0?bytes proof:mode.0?bytes state_proof:mode.1?bytes init_c7:mode.3?bytes lib_extras:mode.4?bytes exit_code:int result:mode.2?bytes = liteServer.RunMethodResult;
@@ -215,58 +109,58 @@ pub struct AccountState {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct RunMethodResult {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockIdExt,
-    pub shardblk: BlockIdExt,
+    mode: (),
+    id: BlockIdExt,
+    shardblk: BlockIdExt,
     #[tl(flags_bit = "mode.0")]
-    pub shard_proof: Option<Vec<u8>>,
+    shard_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.0")]
-    pub proof: Option<Vec<u8>>,
+    proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.1")]
-    pub state_proof: Option<Vec<u8>>,
+    state_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.3")]
-    pub init_c7: Option<Vec<u8>>,
+    init_c7: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.4")]
-    pub lib_extras: Option<Vec<u8>>,
-    pub exit_code: i32,
+    lib_extras: Option<Vec<u8>>,
+    exit_code: i32,
     #[tl(flags_bit = "mode.2")]
-    pub result: Option<Vec<u8>>,
+    result: Option<Vec<u8>>,
 }
 
 /// liteServer.shardInfo id:tonNode.blockIdExt shardblk:tonNode.blockIdExt shard_proof:bytes shard_descr:bytes = liteServer.ShardInfo;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct ShardInfo {
-    pub id: BlockIdExt,
-    pub shardblk: BlockIdExt,
-    pub shard_proof: Vec<u8>,
-    pub shard_descr: Vec<u8>,
+    id: BlockIdExt,
+    shardblk: BlockIdExt,
+    shard_proof: Vec<u8>,
+    shard_descr: Vec<u8>,
 }
 
 /// liteServer.allShardsInfo id:tonNode.blockIdExt proof:bytes data:bytes = liteServer.AllShardsInfo;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct AllShardsInfo {
-    pub id: BlockIdExt,
-    pub proof: Vec<u8>,
-    pub data: Vec<u8>,
+    id: BlockIdExt,
+    proof: Vec<u8>,
+    data: Vec<u8>,
 }
 
 /// liteServer.transactionInfo id:tonNode.blockIdExt proof:bytes transaction:bytes = liteServer.TransactionInfo;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionInfo {
-    pub id: BlockIdExt,
-    pub proof: Vec<u8>,
-    pub transaction: Vec<u8>,
+    id: BlockIdExt,
+    proof: Vec<u8>,
+    transaction: Vec<u8>,
 }
 
 /// liteServer.transactionList ids:(vector tonNode.blockIdExt) transactions:bytes = liteServer.TransactionList;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionList {
-    pub ids: Vec<BlockIdExt>,
-    pub transactions: Vec<u8>,
+    ids: Vec<BlockIdExt>,
+    transactions: Vec<u8>,
 }
 
 /// liteServer.transactionId mode:# account:mode.0?int256 lt:mode.1?long hash:mode.2?int256 = liteServer.TransactionId;
@@ -274,50 +168,50 @@ pub struct TransactionList {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionId {
     #[tl(flags)]
-    pub mode: (),
+    mode: (),
     #[tl(flags_bit = "mode.0")]
-    pub account: Option<Int256>,
+    account: Option<Int256>,
     #[tl(flags_bit = "mode.1")]
-    pub lt: Option<i64>,
+    lt: Option<i64>,
     #[tl(flags_bit = "mode.2")]
-    pub hash: Option<Int256>,
+    hash: Option<Int256>,
 }
 
 /// liteServer.transactionId3 account:int256 lt:long = liteServer.TransactionId3;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionId3 {
-    pub account: Int256,
-    pub lt: i64,
+    account: Int256,
+    lt: i64,
 }
 
 /// liteServer.blockTransactions id:tonNode.blockIdExt req_count:# incomplete:Bool ids:(vector liteServer.transactionId) proof:bytes = liteServer.BlockTransactions;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockTransactions {
-    pub id: BlockIdExt,
+    id: BlockIdExt,
     #[tl(flags)]
-    pub req_count: (),
-    pub inclomplete: bool,
-    pub ids: Vec<TransactionId>,
-    pub proof: Vec<u8>,
+    req_count: (),
+    inclomplete: bool,
+    ids: Vec<TransactionId>,
+    proof: Vec<u8>,
 }
 
 /// liteServer.signature node_id_short:int256 signature:bytes = liteServer.Signature;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Signature {
-    pub node_id_short: Int256,
-    pub signature: Vec<u8>,
+    node_id_short: Int256,
+    signature: Vec<u8>,
 }
 
 /// liteServer.signatureSet validator_set_hash:int catchain_seqno:int signatures:(vector liteServer.signature) = liteServer.SignatureSet;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct SignatureSet {
-    pub validator_set_hash: i32,
-    pub catchain_seqno: i32,
-    pub signatures: Vec<Signature>,
+    validator_set_hash: i32,
+    catchain_seqno: i32,
+    signatures: Vec<Signature>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -332,7 +226,7 @@ pub enum BlockLink {
         to: BlockIdExt,
         dest_proof: Vec<u8>,
         proof: Vec<u8>,
-        state_proof: Vec<u8>,
+        state_proof:Vec<u8>,
     },
     /// liteServer.blockLinkForward to_key_block:Bool from:tonNode.blockIdExt to:tonNode.blockIdExt dest_proof:bytes config_proof:bytes signatures:liteServer.SignatureSet = liteServer.BlockLink;
     #[tl(id = "liteServer.blockLinkForward")]
@@ -350,10 +244,10 @@ pub enum BlockLink {
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct PartialBlockProof {
-    pub complete: bool,
-    pub from: BlockIdExt,
-    pub to: BlockIdExt,
-    pub steps: Vec<BlockLink>,
+    complete: bool,
+    from: BlockIdExt,
+    to: BlockIdExt,
+    steps: Vec<BlockLink>,
 }
 
 /// liteServer.configInfo mode:# id:tonNode.blockIdExt state_proof:bytes config_proof:bytes = liteServer.ConfigInfo;
@@ -361,10 +255,10 @@ pub struct PartialBlockProof {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct ConfigInfo {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockIdExt,
-    pub state_proof: Vec<u8>,
-    pub config_proof: Vec<u8>,
+    mode: (),
+    id: BlockIdExt,
+    state_proof: Vec<u8>,
+    config_proof: Vec<u8>,
 }
 
 /// liteServer.validatorStats mode:# id:tonNode.blockIdExt count:int complete:Bool state_proof:bytes data_proof:bytes = liteServer.ValidatorStats;
@@ -372,19 +266,19 @@ pub struct ConfigInfo {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct ValidatorStats {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockIdExt,
-    pub count: i32,
-    pub complete: bool,
-    pub state_proof: Vec<u8>,
-    pub data_proof: Vec<u8>,
+    mode: (),
+    id: BlockIdExt,
+    count: i32,
+    complete: bool,
+    state_proof: Vec<u8>,
+    data_proof: Vec<u8>,
 }
 
 /// liteServer.debug.verbosity value:int = liteServer.debug.Verbosity;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Verbosity {
-    pub value: i32,
+    value: i32,
 }
 
 /// Functions
@@ -418,7 +312,7 @@ pub struct GetVersion;
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getBlock", scheme = "lite.tl")]
 pub struct GetBlock {
-    pub id: BlockIdExt,
+    id: BlockIdExt,
 }
 
 /// liteServer.getState id:tonNode.blockIdExt = liteServer.BlockState;
@@ -426,7 +320,7 @@ pub struct GetBlock {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getState", scheme = "lite.tl")]
 pub struct GetState {
-    pub id: BlockIdExt,
+    id: BlockIdExt,
 }
 
 /// liteServer.getBlockHeader id:tonNode.blockIdExt mode:# = liteServer.BlockHeader;
@@ -434,9 +328,9 @@ pub struct GetState {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getBlockHeader", scheme = "lite.tl")]
 pub struct GetBlockHeader {
-    pub id: BlockIdExt,
+    id: BlockIdExt,
     #[tl(flags)]
-    pub mode: (),
+    mode: (),
 }
 
 /// liteServer.sendMessage body:bytes = liteServer.SendMsgStatus;
@@ -444,7 +338,7 @@ pub struct GetBlockHeader {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.sendMessage", scheme = "lite.tl")]
 pub struct SendMessage {
-    pub body: Vec<u8>,
+    body: Vec<u8>,
 }
 
 /// liteServer.getAccountState id:tonNode.blockIdExt account:liteServer.accountId = liteServer.AccountState;
@@ -452,8 +346,8 @@ pub struct SendMessage {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getAccountState", scheme = "lite.tl")]
 pub struct GetAccountState {
-    pub id: BlockIdExt,
-    pub account: AccountId,
+    id: BlockIdExt,
+    account: AccountId,
 }
 
 /// liteServer.runSmcMethod mode:# id:tonNode.blockIdExt account:liteServer.accountId method_id:long params:bytes = liteServer.RunMethodResult;
@@ -462,11 +356,11 @@ pub struct GetAccountState {
 #[tl(boxed, id = "liteServer.runSmcMethod", scheme = "lite.tl")]
 pub struct RunSmcMethod {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockIdExt,
-    pub account: AccountId,
-    pub method_id: i64,
-    pub params: Vec<u8>,
+    mode: (),
+    id: BlockIdExt,
+    account: AccountId,
+    method_id: i64,
+    params: Vec<u8>,
 }
 
 /// liteServer.getShardInfo id:tonNode.blockIdExt workchain:int shard:long exact:Bool = liteServer.ShardInfo;
@@ -474,17 +368,17 @@ pub struct RunSmcMethod {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getShardInfo", scheme = "lite.tl")]
 pub struct GetShardInfo {
-    pub id: BlockIdExt,
-    pub workchain: i32,
-    pub shard: i64,
-    pub exact: bool,
+    id: BlockIdExt,
+    workchain: i32,
+    shard: i64,
+    exact: bool,
 }
 /// liteServer.getAllShardsInfo id:tonNode.blockIdExt = liteServer.AllShardsInfo;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getAllShardsInfo", scheme = "lite.tl")]
 pub struct GetAllShardsInfo {
-    pub id: BlockIdExt,
+    id: BlockIdExt,
 }
 
 /// liteServer.getOneTransaction id:tonNode.blockIdExt account:liteServer.accountId lt:long = liteServer.TransactionInfo;
@@ -492,9 +386,9 @@ pub struct GetAllShardsInfo {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getOneTransaction", scheme = "lite.tl")]
 pub struct GetOneTransaction {
-    pub id: BlockIdExt,
-    pub account: AccountId,
-    pub lt: i64,
+    id: BlockIdExt,
+    account: AccountId,
+    lt: i64,
 }
 
 /// liteServer.getTransactions count:# account:liteServer.accountId lt:long hash:int256 = liteServer.TransactionList;
@@ -502,10 +396,11 @@ pub struct GetOneTransaction {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.getTransactions", scheme = "lite.tl")]
 pub struct GetTransactions {
-    pub count: i32,
-    pub account: AccountId,
-    pub lt: i64,
-    pub hash: Int256,
+    #[tl(flags)]
+    count: (),
+    account: AccountId,
+    lt: i64,
+    hash: Int256,
 }
 
 /// liteServer.lookupBlock mode:# id:tonNode.blockId lt:mode.1?long utime:mode.2?int = liteServer.BlockHeader;
@@ -514,12 +409,12 @@ pub struct GetTransactions {
 #[tl(boxed, id = "liteServer.lookupBlock", scheme = "lite.tl")]
 pub struct LookupBlock {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockId,
+    mode: (),
+    id: BlockId,
     #[tl(flags_bit = "mode.1")]
-    pub lt: Option<i64>,
+    lt: Option<i64>,
     #[tl(flags_bit = "mode.2")]
-    pub utime: Option<i32>,
+    utime: Option<i32>,
 }
 
 /// liteServer.listBlockTransactions id:tonNode.blockIdExt mode:# count:# after:mode.7?liteServer.transactionId3 reverse_order:mode.6?true want_proof:mode.5?true = liteServer.BlockTransactions;
@@ -527,16 +422,17 @@ pub struct LookupBlock {
 #[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed, id = "liteServer.listBlockTransactions", scheme = "lite.tl")]
 pub struct ListBlockTransactions {
-    pub id: BlockIdExt,
+    id: BlockIdExt,
     #[tl(flags)]
-    pub mode: (),
-    pub count: i32,
+    mode: (),
+    #[tl(flags)]
+    count: (),
     #[tl(flags_bit = "mode.7")]
-    pub after: Option<TransactionId3>,
+    after: Option<TransactionId3>,
     #[tl(flags_bit = "mode.6")]
-    pub reverse_order: Option<True>,
+    reverse_order: Option<True>,
     #[tl(flags_bit = "mode.5")]
-    pub want_proof: Option<True>,
+    want_proof: Option<True>,
 }
 
 /// liteServer.getBlockProof mode:# known_block:tonNode.blockIdExt target_block:mode.0?tonNode.blockIdExt = liteServer.PartialBlockProof;
@@ -545,10 +441,10 @@ pub struct ListBlockTransactions {
 #[tl(boxed, id = "liteServer.getBlockProof", scheme = "lite.tl")]
 pub struct GetBlockProof {
     #[tl(flags)]
-    pub mode: (),
-    pub known_block: BlockIdExt,
+    mode: (),
+    known_block: BlockIdExt,
     #[tl(flags_bit = "mode.0")]
-    pub target_block: Option<BlockIdExt>,
+    target_block: Option<BlockIdExt>,
 }
 
 /// liteServer.getConfigAll mode:# id:tonNode.blockIdExt = liteServer.ConfigInfo;
@@ -557,8 +453,8 @@ pub struct GetBlockProof {
 #[tl(boxed, id = "liteServer.getConfigAll", scheme = "lite.tl")]
 pub struct GetConfigAll {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockIdExt,
+    mode: (),
+    id: BlockIdExt,
 }
 
 /// liteServer.getConfigParams mode:# id:tonNode.blockIdExt param_list:(vector int) = liteServer.ConfigInfo;
@@ -567,9 +463,9 @@ pub struct GetConfigAll {
 #[tl(boxed, id = "liteServer.getConfigParams", scheme = "lite.tl")]
 pub struct GetConfigParams {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockIdExt,
-    pub param_list: Vec<i32>,
+    mode: (),
+    id: BlockIdExt,
+    param_list: Vec<i32>,
 }
 
 /// liteServer.getValidatorStats#091a58bc mode:# id:tonNode.blockIdExt limit:int start_after:mode.0?int256 modified_after:mode.2?int = liteServer.ValidatorStats;
@@ -578,55 +474,38 @@ pub struct GetConfigParams {
 #[tl(boxed, id = 0x091a58bc)]
 pub struct GetValidatorStats {
     #[tl(flags)]
-    pub mode: (),
-    pub id: BlockIdExt,
-    pub limit: i32,
+    mode: (),
+    id: BlockIdExt,
+    limit: i32,
     #[tl(flags_bit = "mode.0")]
-    pub start_after: Option<Int256>,
+    start_after: Option<Int256>,
     #[tl(flags_bit = "mode.2")]
-    pub modified_after: Option<i32>,
+    modified_after: Option<i32>,
 
 }
+"""
 
-/// liteServer.query data:bytes = Object;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-#[tl(boxed, id = "liteServer.query", scheme = "lite.tl")]
-pub struct Query{pub data: Vec<u8>}
+def parse(str):
+    clean = re.findall(r"(pub struct [A-Za-z]+ \{[^}]*\})", str)
+    for item in clean:
+        constr(item)
 
+def constr(str):
+    name = re.findall(r"struct\s(.*)\s\{", str)
+    clean = re.findall(r"\s+(.*)\:\s(.*),", str)
+    result = f"impl {name[0]} {{\n"
+    result += "\tfn new("
+    for var, t in clean:
+        result += f"{var}: {t}, "
+    result = result[:-2]
+    result += ") -> Self {\n\t\tSelf("
+    for var, _ in clean:
+        result+=f"{var}, "
+    result = result[:-2]
+    result += ")\n\t}\n"
+    for var, t in clean:
+        result += f"\tfn {var}(&self) -> {t} {{\n\t\tself.{var}\n\t}}\n"
+    result += "}"
+    print(result)
 
-#[cfg(test)]
-mod tests {
-    use crate::scheme::*;
-    use hex::{FromHex};
-    use tl_proto;
-    #[test]
-    fn block_id_test() {
-        let bytes = tl_proto::serialize(&BlockId {workchain: 0, shard: 0x8000000000000000, seqno: 13131131});
-        println!("{:?}", bytes);
-        let decoded = tl_proto::deserialize(&bytes).unwrap();
-        assert!(matches!(
-            decoded,
-            BlockId {workchain: 0, shard: 0x8000000000000000, seqno: 13131131}
-        ));
-    }
-    #[test]
-    #[should_panic(expected = "called `Result::unwrap()` on an `Err` pub value: InvalidHexCharacter { pub c: 'h', pub index: 1 }")]
-    fn int256_panic() {
-        let hex_hash = "7h43835181544d3721196153f912226625568035627bdc5df827c983a4965cae";
-        let _a = Int256::from_str(hex_hash).unwrap();
-    }
-    #[test]
-    fn int256_test() {
-        let hex_hash = "7f43835181544d3721196153f912226625568035627bdc5df827c983a4965cae";
-        let encoded_hash = <[u8; 32]>::from_hex(&hex_hash).unwrap();
-        println!("{:?}", tl_proto::serialize(Int256(encoded_hash)));
-        let _check: [u8; 32] = [127, 67, 131, 81, 129, 84, 77, 55, 33, 25, 97, 83, 249, 18, 34, 102, 37, 86, 128, 53, 98, 123, 220, 93, 248, 39, 201, 131, 164, 150, 92, 174];
-        assert!(matches!(tl_proto::serialize(Int256(encoded_hash)), _check));
-    }
-    // #[test]
-    // fn blockId_test() {
-    //     let 
-    // }
-}
-
+parse(str)

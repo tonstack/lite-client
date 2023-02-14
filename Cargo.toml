@@ -26,3 +26,4 @@ ureq = "2.4.0"
 ton_block = { git = 'https://github.com/tonlabs/ton-labs-block', tag = '1.7.37' }
 tl-proto = "0.4.1"
 ciborium-io = "0.2.0"
+derivative = "2.2.0"

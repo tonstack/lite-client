@@ -27,30 +27,31 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// Send external message
-    // #[clap(arg_required_else_help = true, parse(from_os_str))]
-    // Send {
-    //     /// File to send
-    //     file: PathBuf,
-    // },
-    // /// Get time from liteserver
-    // GetTime,
+    #[clap(arg_required_else_help = true, parse(from_os_str))]
+    Send {
+        /// File to send
+        file: PathBuf,
+    },
+    /// Get time from liteserver
+    GetTime,
     /// Get version from liteserver
     GetVersion,
     /// Get masterchainInfo
     GetMasterchainInfo,
-    // #[clap(arg_required_else_help = true)]
-    // GetBlock {
-    //     id: String,
-    // },
+    #[clap(arg_required_else_help = true)]
+    GetBlock {
+        id: String,
+    },
 }
 
 fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
     match command {
-        // Commands::GetTime => {
-        //     let result = *client.get_time()?.now() as u64;
-        //     let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
-        //     println!("Current time: {} => {:?}", result, time);
-        // }
+        Commands::GetTime => {
+            let result = (*client).get_time()?.now as u64;
+            log::debug!("time: {}", result);
+            let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
+            println!("Current time: {} => {:?}", result, time);
+        }
         Commands::GetVersion => {
             let result = (*client).get_version()?;
             println!("Current version: {:?}", result);
@@ -59,6 +60,8 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             let result = (*client).get_masterchain_info()?;
             println!("Last Block: {:?}", result);
         }
+        Commands::Send { file } => todo!(),
+        Commands::GetBlock { id } => todo!(),
         // Commands::Send { file } => {
         //     let mut data = Vec::new();
         //     if file.to_str().map(|f| f == "-").unwrap_or(false) {
