@@ -1,10 +1,11 @@
+pub mod scheme;
 use std::error::Error;
 use std::fs::{read_to_string, File};
 use std::path::PathBuf;
 use std::str::FromStr;
 use liteclient::LiteClient;
 use clap::{Parser, Subcommand};
-use ton_block::BlockIdExt;
+use pretty_hex::PrettyHex;
 use std::io::{Read, stdin};
 use chrono::{DateTime, Utc};
 use std::time::{Duration, UNIX_EPOCH};
@@ -38,29 +39,52 @@ enum Commands {
     GetVersion,
     /// Get masterchainInfo
     GetMasterchainInfo,
+    GetMasterchainInfoExt,
     #[clap(arg_required_else_help = true)]
     GetBlock {
-        id: String,
+        shard: u64,
+        seqno: u32,
+        root_hash: String,
+        file_hash: String,
     },
+    GetLastBlockInfo,
 }
 
 fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
     match command {
         Commands::GetTime => {
-            let result = *client.get_time()?.now() as u64;
+            let result = (*client).get_time()?.now as u64;
+            log::debug!("time: {}", result);
             let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
             println!("Current time: {} => {:?}", result, time);
         }
         Commands::GetVersion => {
-            let result = *client.get_version()?.version() as i32;
-            println!("Current version: {}", result);
+            let result = (*client).get_version()?;
+            println!("Current version: {:?}", result);
         }
         Commands::GetMasterchainInfo => {
-            let result = (*client).get_masterchain_info()?.last().seq_no();
-            println!("Last Block: {}", result);
+            let result = (*client).get_masterchain_info()?;
+            println!("Last Block: {:?}", result);
+        }
+        Commands::GetMasterchainInfoExt => {
+            let result = (*client).get_masterchain_info_ext(0)?;
+            println!("Last Block: {:?}", result);
+        }
+        Commands::GetBlock {
+            shard,
+            seqno,
+            root_hash,
+            file_hash} => {
+            let result = (*client).get_block(liteclient::scheme::BlockIdExt{workchain: -1, shard: *shard, seqno: *seqno, root_hash: liteclient::scheme::Int256::from_str(root_hash)?, file_hash: liteclient::scheme::Int256::from_str(file_hash)?})?;
+            println!("BlockData: {:?}", result.data.hex_dump());
+        }
+        Commands::GetLastBlockInfo{} => {
+            let info = (*client).get_masterchain_info()?;
+            let result = (*client).get_block(liteclient::scheme::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash})?;
+            println!("Seqno: {}\nBlockData: {:?}", result.id.seqno ,result.data.hex_dump());
         }
         Commands::Send { file } => {
-            let mut data = Vec::new();
+            let mut data = Vec::<u8>::new();
             if file.to_str().map(|f| f == "-").unwrap_or(false) {
                 stdin().read_to_end(&mut data)?;
             } else {
@@ -68,12 +92,6 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             }
             let result = client.send_message(data)?;
             println!("result = {:?}", result);
-        }
-
-        // cargo run get-block "(-1:8000000000000000, 25123484, rh 7f43835181544d3721196153f912226625568035627bdc5df827c983a4965cae, fh 36d45897be235ddc69abca3d35007fcdd15a8fbff41eb91efc64307a9a2cb0c7)"
-        Commands::GetBlock {id} => {
-            let result = client.get_block(BlockIdExt::from_str(id.as_str())?)?;
-            println!("BlockData: {:?}", result);
         }
     };
     Ok(())

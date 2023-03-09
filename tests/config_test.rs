@@ -1,4 +1,4 @@
-use crate::config::ConfigGlobal;
+use liteclient::config::ConfigGlobal;
 
 #[test]
 fn deserialize_mainnet_config() {
