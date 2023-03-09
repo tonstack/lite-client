@@ -68,7 +68,7 @@ fn get_block_test() {
     };
     let mut client = LiteClient::connect(&config).unwrap();
     let info = client.get_masterchain_info().unwrap();
-    assert!(client.get_block(liteclient::scheme::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash}).is_ok());
+    assert!(client.get_block(liteclient::tl_types::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash}).is_ok());
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn get_state_test() {
     };
     let mut client = LiteClient::connect(&config).unwrap();
     let info = client.get_masterchain_info().unwrap();
-    assert!(client.get_state(liteclient::scheme::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash}).is_ok());
+    assert!(client.get_state(liteclient::tl_types::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash}).is_ok());
 }
 
 #[test]
@@ -99,7 +99,7 @@ fn get_block_header() {
     let mut client = LiteClient::connect(&config).unwrap();
     let info = client.get_masterchain_info().unwrap();
 
-    assert!(client.get_block(liteclient::scheme::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash}).is_ok());
+    assert!(client.get_block(liteclient::tl_types::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash}).is_ok());
 }
 
 #[test]

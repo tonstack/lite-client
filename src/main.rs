@@ -1,4 +1,4 @@
-pub mod scheme;
+pub mod tl_types;
 use std::error::Error;
 use std::fs::{read_to_string, File};
 use std::path::PathBuf;
@@ -75,12 +75,12 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             seqno,
             root_hash,
             file_hash} => {
-            let result = (*client).get_block(liteclient::scheme::BlockIdExt{workchain: -1, shard: *shard, seqno: *seqno, root_hash: liteclient::scheme::Int256::from_str(root_hash)?, file_hash: liteclient::scheme::Int256::from_str(file_hash)?})?;
+            let result = (*client).get_block(liteclient::tl_types::BlockIdExt{workchain: -1, shard: *shard, seqno: *seqno, root_hash: liteclient::tl_types::Int256::from_str(root_hash)?, file_hash: liteclient::tl_types::Int256::from_str(file_hash)?})?;
             println!("BlockData: {:?}", result.data.hex_dump());
         }
         Commands::GetLastBlockInfo{} => {
             let info = (*client).get_masterchain_info()?;
-            let result = (*client).get_block(liteclient::scheme::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash})?;
+            let result = (*client).get_block(liteclient::tl_types::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash})?;
             println!("Seqno: {}\nBlockData: {:?}", result.id.seqno ,result.data.hex_dump());
         }
         Commands::Send { file } => {

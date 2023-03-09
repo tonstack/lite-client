@@ -21,7 +21,7 @@ pub struct String(Vec<u8>);
 pub struct Int128(pub [u8; 16]);
 impl FromStr for Int128 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Int128(<[u8; 16]>::from_hex(&s).unwrap()))
+        Ok(Int128(<[u8; 16]>::from_hex(s).unwrap()))
     }
     type Err = FromHexError;
 }
@@ -37,7 +37,7 @@ impl ToString for Int128 {
 pub struct Int256(pub [u8; 32]);
 impl FromStr for Int256 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Int256(<[u8; 32]>::from_hex(&s).unwrap()))
+        Ok(Int256(<[u8; 32]>::from_hex(s).unwrap()))
     }
     type Err = FromHexError;
 }
@@ -58,7 +58,6 @@ pub struct Bytes{pub data:String}
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockId {
     pub workchain: i32,
-    // #[tl(with = "tl_shard")]
     pub shard: u64,
     pub seqno: u32,
 }
@@ -66,7 +65,6 @@ pub struct BlockId {
 /// tonNode.blockIdExt workchain:int shard:long seqno:int root_hash:int256 file_hash:int256 = tonNode.BlockIdExt;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
-// #[tl(boxed, id = "tonNode.blockIdExt", scheme = "lite.tl")]
 pub struct BlockIdExt {
     pub workchain: i32,
     pub shard: u64,
@@ -617,7 +615,7 @@ pub struct Query{pub data: Vec<u8>}
 
 #[cfg(test)]
 mod tests {
-    use crate::scheme::*;
+    use crate::tl_types::*;
     use hex::FromHex;
     use tl_proto;
     #[test]
@@ -638,9 +636,5 @@ mod tests {
         let _check: [u8; 32] = [127, 67, 131, 81, 129, 84, 77, 55, 33, 25, 97, 83, 249, 18, 34, 102, 37, 86, 128, 53, 98, 123, 220, 93, 248, 39, 201, 131, 164, 150, 92, 174];
         assert!(matches!(tl_proto::serialize(Int256(encoded_hash)), _check));
     }
-    // #[test]
-    // fn blockId_test() {
-    //     let 
-    // }
 }
 
