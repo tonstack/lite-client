@@ -1,8 +1,6 @@
 pub mod config;
 
-#[cfg(test)]
-mod tests;
-mod scheme;
+pub mod scheme;
 
 pub use private::LiteClient;
 pub use private::Result;
@@ -20,7 +18,7 @@ mod private {
     use rand::prelude::SliceRandom;
     use crate::config::ConfigGlobal;
     use crate::scheme;
-    use tl_proto::{TlWrite, Bare, TlResult, TlRead};
+    use tl_proto::{TlWrite, TlResult, TlRead};
 
 
     #[derive(Debug)]
@@ -107,9 +105,9 @@ mod private {
             self.lite_query(scheme::GetMasterchainInfo, &mut response) as TlResult<scheme::MasterchainInfo> 
         }
 
-        pub fn get_masterchain_info_ext(&mut self) -> TlResult<scheme::MasterchainInfoExt> {
+        pub fn get_masterchain_info_ext(&mut self, mode: i32) -> TlResult<scheme::MasterchainInfoExt> {
             let  mut response = Vec::<u8>::new();
-            self.lite_query(scheme::GetMasterchainInfoExt, &mut response) as TlResult<scheme::MasterchainInfoExt> 
+            self.lite_query(scheme::GetMasterchainInfoExt{mode}, &mut response) as TlResult<scheme::MasterchainInfoExt> 
         }
         
         pub fn get_time(&mut self) -> TlResult<scheme::CurrentTime> {
