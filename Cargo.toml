@@ -5,7 +5,7 @@ authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>", "Timur Kalmykov <lendedland@g
 edition = "2021"
 
 [dependencies]
-base64 = '0.13.0'
+base64 = "0.13.0"
 pretty-hex = '0.2.1'
 env_logger = '0.9.0'
 log = '0.4.14'

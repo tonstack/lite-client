@@ -1,4 +1,4 @@
-use liteclient::LiteClient;
+use liteclient::{LiteClient, tl_types::{Int256, BlockIdExt, AccountId}};
 
 #[test]
 fn get_masterchain_info_test() {
@@ -118,7 +118,24 @@ fn send_message_test() {
 
 #[test]
 fn get_account_state_test() {
-    todo!()    
+    let config = {
+        let url = "https://ton-blockchain.github.io/global.config.json";
+        let mut response = ureq::get(url).call().unwrap();
+        while response.status() != 200 {
+            response = ureq::get(url).call().unwrap();
+        }
+        response.into_string().unwrap()
+    };
+    let mut client = LiteClient::connect(&config).unwrap();
+    let workchain: i32 = -1;
+    let shard: u64 = 9223372036854775808;
+    let seqno: u32 = 28235435;
+    let root_hash = Int256::from_base64("Ah9jCut6khUq0CRBGdyjXkevGfX3VgtwP9/o4LVU4Io=").unwrap();
+    let file_hash = Int256::from_base64("F7F/vvTky8+qofgh8fLkfNXe0C8ne1rR13YDxtfHYPI=").unwrap();
+    let account = AccountId::from_friendly("EQA-PqYkjSr-bbu_dtpV379hZNiFXFGQGlr74SUOdOgSgxE0").unwrap();
+    let res = client.get_account_state(BlockIdExt{workchain, shard, seqno, root_hash: root_hash.clone(), file_hash: file_hash.clone()}, account);
+    assert!(res.is_ok());
+    assert_eq!(res.unwrap().state, Vec::<u8>::new());
 }
 
 #[test]

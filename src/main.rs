@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use liteclient::LiteClient;
 use clap::{Parser, Subcommand};
+use liteclient::tl_types::AccountId;
 use pretty_hex::PrettyHex;
 use std::io::{Read, stdin};
 use chrono::{DateTime, Utc};
@@ -48,6 +49,9 @@ enum Commands {
         file_hash: String,
     },
     GetLastBlockInfo,
+    GetAccountState {
+        s: String,
+    }
 }
 
 fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
@@ -92,6 +96,12 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             }
             let result = client.send_message(data)?;
             println!("result = {:?}", result);
+        }
+        Commands::GetAccountState { s } => {
+            let info = (*client).get_masterchain_info_ext(0)?;
+            let acc = AccountId::from_friendly(&s)?;
+            let result = (*client).get_account_state(info.last, acc);
+            println!("{:?}", result);
         }
     };
     Ok(())
