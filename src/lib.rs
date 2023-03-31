@@ -39,6 +39,7 @@ mod private {
             T: TlWrite,
             U: TlRead<'tl> 
         {
+            log::debug!("struct:\n{:x?}", tl_proto::serialize(&request));
             let mut message = tl_proto::serialize(tl_types::Message::Query { 
                 query_id: (tl_types::Int256(rand::random())), 
                 query: (tl_proto::serialize(tl_types::Query{data: (tl_proto::serialize(request))})) 
@@ -96,7 +97,7 @@ mod private {
             self.lite_query(tl_types::GetState{id}, &mut response) as TlDResult<tl_types::BlockState> 
         }
 
-        pub fn get_block_header(&mut self, id: tl_types::BlockIdExt, mode: ()) -> TlDResult<tl_types::BlockHeader> {
+        pub fn get_block_header(&mut self, id: tl_types::BlockIdExt, mode: i32) -> TlDResult<tl_types::BlockHeader> {
             let  mut response = Vec::<u8>::new();
             self.lite_query(tl_types::GetBlockHeader{id, mode}, &mut response) as TlDResult<tl_types::BlockHeader> 
         }
@@ -116,7 +117,7 @@ mod private {
             self.lite_query(tl_types::RunSmcMethod{mode: (), id, account, method_id, params}, &mut response) as TlDResult<tl_types::RunMethodResult> 
         }
 
-        pub fn get_shard_info(&mut self, id: tl_types::BlockIdExt, workchain: i32, shard: i64, exact: bool) -> TlDResult<tl_types::ShardInfo> {
+        pub fn get_shard_info(&mut self, id: tl_types::BlockIdExt, workchain: i32, shard: u64, exact: bool) -> TlDResult<tl_types::ShardInfo> {
             let  mut response = Vec::<u8>::new();
             self.lite_query(tl_types::GetShardInfo{id, workchain, shard, exact}, &mut response) as TlDResult<tl_types::ShardInfo> 
         }
@@ -137,8 +138,11 @@ mod private {
         }
 
         pub fn lookup_block(&mut self, id: tl_types::BlockId, lt: Option<i64>, utime: Option<i32>) -> TlDResult<tl_types::BlockHeader> {
+            let trash: Option<u8>;
+            if lt.is_none() && utime.is_none() {trash = Some(0);}
+            else {trash = None;}
             let  mut response = Vec::<u8>::new();
-            self.lite_query(tl_types::LookupBlock{mode: (), id, lt, utime}, &mut response) as TlDResult<tl_types::BlockHeader> 
+            self.lite_query(tl_types::LookupBlock{mode: (), trash, id, lt, utime}, &mut response) as TlDResult<tl_types::BlockHeader> 
         }
 
         pub fn list_block_transactions(&mut self, id: tl_types::BlockIdExt, count: i32, after: Option<tl_types::TransactionId3>, reverse_order: Option<tl_types::True>, want_proof: Option<tl_types::True>) -> TlDResult<tl_types::BlockTransactions> {
@@ -151,14 +155,14 @@ mod private {
             self.lite_query(tl_types::GetBlockProof{mode: (), known_block, target_block}, &mut response) as TlDResult<tl_types::PartialBlockProof> 
         }
 
-        pub fn get_config_all(&mut self, id: tl_types::BlockIdExt) -> TlDResult<tl_types::ConfigInfo> {
+        pub fn get_config_all(&mut self, mode: i32, id: tl_types::BlockIdExt) -> TlDResult<tl_types::ConfigInfo> {
             let  mut response = Vec::<u8>::new();
-            self.lite_query(tl_types::GetConfigAll{mode: (), id}, &mut response) as TlDResult<tl_types::ConfigInfo> 
+            self.lite_query(tl_types::GetConfigAll{mode, id}, &mut response) as TlDResult<tl_types::ConfigInfo> 
         }
 
-        pub fn get_config_params(&mut self, id: tl_types::BlockIdExt, param_list: Vec<i32>) -> TlDResult<tl_types::ConfigInfo> {
+        pub fn get_config_params(&mut self, mode: i32, id: tl_types::BlockIdExt, param_list: Vec<i32>) -> TlDResult<tl_types::ConfigInfo> {
             let  mut response = Vec::<u8>::new();
-            self.lite_query(tl_types::GetConfigParams{mode: (), id, param_list}, &mut response) as TlDResult<tl_types::ConfigInfo> 
+            self.lite_query(tl_types::GetConfigParams{mode, id, param_list}, &mut response) as TlDResult<tl_types::ConfigInfo> 
         }
 
         pub fn get_validator_stats(&mut self, id: tl_types::BlockIdExt, limit: i32, start_after: Option<tl_types::Int256>, modified_after: Option<i32>) -> TlDResult<tl_types::ValidatorStats> {

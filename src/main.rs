@@ -5,11 +5,14 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use liteclient::LiteClient;
 use clap::{Parser, Subcommand};
-use liteclient::tl_types::AccountId;
 use pretty_hex::PrettyHex;
-use std::io::{Read, stdin};
+use std::io::{Read, stdin, Write};
 use chrono::{DateTime, Utc};
 use std::time::{Duration, UNIX_EPOCH};
+use log::LevelFilter;
+use log4rs::append::file::FileAppender;
+use log4rs::encode::pattern::PatternEncoder;
+use log4rs::config::{Appender, Config, Root};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -51,7 +54,24 @@ enum Commands {
     GetLastBlockInfo,
     GetAccountState {
         s: String,
-    }
+    },
+    LookupBlock {
+        seqno: u32,
+    },
+    GetState {
+        file_name: String,
+    },
+    GetShardInfo {
+        seqno: u32,
+        workchain: i32,
+        
+    },
+    GetAllShardsInfo {
+        seqno: u32,
+    },
+    GetBlockProof {
+        seqno: u32,
+    },
 }
 
 fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
@@ -99,16 +119,61 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
         }
         Commands::GetAccountState { s } => {
             let info = (*client).get_masterchain_info_ext(0)?;
-            let acc = AccountId::from_friendly(&s)?;
+            let acc = liteclient::tl_types::AccountId::from_friendly(&s)?;
             let result = (*client).get_account_state(info.last, acc);
             println!("{:?}", result);
+        }
+        Commands::LookupBlock { seqno } => {
+            let block = liteclient::tl_types::BlockId{seqno: *seqno, shard: 9223372036854775808, workchain: -1};
+            let res = (*client).lookup_block(block, None, None).unwrap();
+            println!("{:?}", res);
+        }
+        Commands::GetState{ file_name} => {
+            let workchain: i32 = -1;
+            let shard: u64 = 9223372036854775808;
+            let seqno: u32 = 999;
+            let root_hash = liteclient::tl_types::Int256::from_base64("46ZSUC+ehXaSunL740QURc7T6+o8CqykoT3Pg5Wbfak=").unwrap();
+            let file_hash = liteclient::tl_types::Int256::from_base64("Q8l3/cBazINazII5mOFSGg6/tuqiRKmdA3+Fjlrp/e4=").unwrap();
+            let result = (*client).get_state(liteclient::tl_types::BlockIdExt{workchain, shard, seqno, root_hash: root_hash.clone(), file_hash: file_hash.clone()})?;
+            let mut file = File::create(&file_name)?;
+            file.write_all(&result.id.workchain.to_le_bytes())?;
+            file.write_all(&result.id.seqno.to_le_bytes())?;
+            file.write_all(&result.id.shard.to_le_bytes())?;
+            file.write_all(&result.id.root_hash.0)?;
+            file.write_all(&result.id.file_hash.0)?;
+            file.write_all(&result.data)?;
+        }
+        Commands::GetShardInfo{ seqno, workchain } => {
+            let block = (*client).lookup_block(liteclient::tl_types::BlockId { workchain: -1, shard: 9223372036854775808, seqno: *seqno }, None, None)?;
+            let result = (*client).get_shard_info(block.id, *workchain, 9223372036854775808, true)?;
+            println!("{:?}", &result);
+        }
+        Commands::GetAllShardsInfo { seqno } => {
+            let block = (*client).lookup_block(liteclient::tl_types::BlockId { workchain: -1, shard: 9223372036854775808, seqno: *seqno }, None, None)?;
+            let result = (*client).get_all_shards_info(block.id)?;
+            println!("{:?}", &result);
+        }
+        Commands::GetBlockProof { seqno } => {
+            let block = (*client).lookup_block(liteclient::tl_types::BlockId { workchain: -1, shard: 9223372036854775808, seqno: *seqno }, None, None)?;
+            let result = (*client).get_block_proof(block.id, None)?;
+            println!("{:?}", &result);
         }
     };
     Ok(())
 }
 
 fn main() -> Result<()> {
-    env_logger::init();
+    let logfile = FileAppender::builder()
+        .encoder(Box::new(PatternEncoder::new("{l} - {m}\n")))
+        .build("log/output.log")?;
+
+    let config = Config::builder()
+        .appender(Appender::builder().build("logfile", Box::new(logfile)))
+        .build(Root::builder()
+                .appender("logfile")
+                .build(LevelFilter::Debug))?;
+
+    log4rs::init_config(config)?;
     let args = Args::parse();
     let config = if let Some(config) = args.config {
         read_to_string(config)?
