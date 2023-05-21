@@ -104,8 +104,8 @@ fn get_state_test() {
         workchain,
         shard,
         seqno,
-        root_hash: root_hash.clone(),
-        file_hash: file_hash.clone(),
+        root_hash,
+        file_hash,
     });
     if result.is_err() {
         assert!(
@@ -115,7 +115,7 @@ fn get_state_test() {
                     == liteclient::tl_types::String::new("state already gc'd".to_string())
         );
     } else {
-        assert!(!result.clone().unwrap().data.is_empty());
+        assert!(!result.unwrap().data.is_empty());
     }
 }
 
@@ -181,8 +181,8 @@ fn get_account_state_test() {
                 workchain,
                 shard,
                 seqno,
-                root_hash: root_hash.clone(),
-                file_hash: file_hash.clone(),
+                root_hash,
+                file_hash,
             },
             account,
         )
@@ -380,12 +380,12 @@ fn lookup_block_test() {
         shard: 1,
         seqno: 1,
     };
-    let res1 = client.lookup_block(block.clone(), None, None).unwrap();
+    let res1 = client.lookup_block(block, None, None).unwrap();
     let res2 = client
         .lookup_block(empty_block.clone(), Some(lt), None)
         .unwrap();
     let res3 = client
-        .lookup_block(empty_block.clone(), None, Some(utime))
+        .lookup_block(empty_block, None, Some(utime))
         .unwrap();
     assert_eq!(res1, res2);
     assert_eq!(res1, res3);
@@ -409,7 +409,7 @@ fn list_block_transactions_test() {
         root_hash: Int256::from_base64("Re9R5ML5bOjRDb1H8/hDZIcVDZ6UuhzIlL38J9omfes=").unwrap(),
         file_hash: Int256::from_base64("kjP+8ReqSSiB6a6KKh9NKr/lov3RhFNZm0e/6Lndguc=").unwrap(),
     };
-    let result = client.list_block_transactions(id.clone(), 10, None, None, None);
+    let result = client.list_block_transactions(id, 10, None, None, None);
     assert!(result.is_ok());
 }
 
@@ -450,7 +450,7 @@ fn get_config_all_test() {
         root_hash: Int256::from_base64("Re9R5ML5bOjRDb1H8/hDZIcVDZ6UuhzIlL38J9omfes=").unwrap(),
         file_hash: Int256::from_base64("kjP+8ReqSSiB6a6KKh9NKr/lov3RhFNZm0e/6Lndguc=").unwrap(),
     };
-    let result = client.get_config_all(0, id.clone());
+    let result = client.get_config_all(0, id);
     assert!(result.is_ok());
 }
 
@@ -473,7 +473,7 @@ fn get_config_params_test() {
         file_hash: Int256::from_base64("kjP+8ReqSSiB6a6KKh9NKr/lov3RhFNZm0e/6Lndguc=").unwrap(),
     };
     let param_list = [0, 1, 2];
-    let result = client.get_config_params(0, id.clone(), param_list.to_vec());
+    let result = client.get_config_params(0, id, param_list.to_vec());
     assert!(result.is_ok());
 }
 
@@ -509,6 +509,6 @@ fn get_validator_stats_test() {
         Some(1650613847),
     );
     assert!(result.is_ok());
-    let result = client.get_validator_stats(id.clone(), 10, None, None);
+    let result = client.get_validator_stats(id, 10, None, None);
     assert!(result.is_ok());
 }

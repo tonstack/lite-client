@@ -141,7 +141,7 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
         }
         Commands::GetAccountState { s } => {
             let info = (*client).get_masterchain_info_ext(0)?;
-            let acc = liteclient::tl_types::AccountId::from_friendly(&s)?;
+            let acc = liteclient::tl_types::AccountId::from_friendly(s)?;
             let result = (*client).get_account_state(info.last, acc);
             println!("{:?}", result);
         }
@@ -170,10 +170,10 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
                 workchain,
                 shard,
                 seqno,
-                root_hash: root_hash.clone(),
-                file_hash: file_hash.clone(),
+                root_hash,
+                file_hash,
             })?;
-            let mut file = File::create(&file_name)?;
+            let mut file = File::create(file_name)?;
             file.write_all(&result.id.workchain.to_le_bytes())?;
             file.write_all(&result.id.seqno.to_le_bytes())?;
             file.write_all(&result.id.shard.to_le_bytes())?;

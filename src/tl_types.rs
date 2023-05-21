@@ -81,11 +81,11 @@ impl Int256 {
         Ok(Int256(<[u8; 32]>::from_hex(s).unwrap()))
     }
     pub fn from_base64(s: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let res = base64::decode(&s);
+        let res = base64::decode(s);
         if res.is_ok() {
             Ok(Self(res.unwrap().try_into().unwrap()))
         } else {
-            let res = base64::decode_config(&s, base64::URL_SAFE);
+            let res = base64::decode_config(s, base64::URL_SAFE);
             Ok(Self(res.unwrap().try_into().unwrap()))
         }
     }
@@ -875,7 +875,7 @@ mod tests {
     #[test]
     fn int256_test() {
         let hex_hash = "7f43835181544d3721196153f912226625568035627bdc5df827c983a4965cae";
-        let encoded_hash = <[u8; 32]>::from_hex(&hex_hash).unwrap();
+        let encoded_hash = <[u8; 32]>::from_hex(hex_hash).unwrap();
         println!("{:?}", tl_proto::serialize(Int256(encoded_hash)));
         let _check: [u8; 32] = [
             127, 67, 131, 81, 129, 84, 77, 55, 33, 25, 97, 83, 249, 18, 34, 102, 37, 86, 128, 53,
