@@ -1,18 +1,18 @@
 pub mod tl_types;
-use std::error::Error;
-use std::fs::{read_to_string, File};
-use std::path::PathBuf;
-use std::str::FromStr;
-use liteclient::LiteClient;
-use clap::{Parser, Subcommand};
-use pretty_hex::PrettyHex;
-use std::io::{Read, stdin, Write};
 use chrono::{DateTime, Utc};
-use std::time::{Duration, UNIX_EPOCH};
+use clap::{Parser, Subcommand};
+use liteclient::LiteClient;
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
-use log4rs::encode::pattern::PatternEncoder;
 use log4rs::config::{Appender, Config, Root};
+use log4rs::encode::pattern::PatternEncoder;
+use pretty_hex::PrettyHex;
+use std::error::Error;
+use std::fs::{read_to_string, File};
+use std::io::{stdin, Read, Write};
+use std::path::PathBuf;
+use std::str::FromStr;
+use std::time::{Duration, UNIX_EPOCH};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -20,7 +20,13 @@ type Result<T> = std::result::Result<T, Box<dyn Error>>;
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Local network config from file
-    #[clap(short, long, parse(from_os_str), value_name = "FILE", group = "config-group")]
+    #[clap(
+        short,
+        long,
+        parse(from_os_str),
+        value_name = "FILE",
+        group = "config-group"
+    )]
     config: Option<PathBuf>,
     /// Use testnet config, if not provided use mainnet config
     #[clap(short, long, parse(from_flag), group = "config-group")]
@@ -64,7 +70,6 @@ enum Commands {
     GetShardInfo {
         seqno: u32,
         workchain: i32,
-        
     },
     GetAllShardsInfo {
         seqno: u32,
@@ -98,14 +103,31 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             shard,
             seqno,
             root_hash,
-            file_hash} => {
-            let result = (*client).get_block(liteclient::tl_types::BlockIdExt{workchain: -1, shard: *shard, seqno: *seqno, root_hash: liteclient::tl_types::Int256::from_str(root_hash)?, file_hash: liteclient::tl_types::Int256::from_str(file_hash)?})?;
+            file_hash,
+        } => {
+            let result = (*client).get_block(liteclient::tl_types::BlockIdExt {
+                workchain: -1,
+                shard: *shard,
+                seqno: *seqno,
+                root_hash: liteclient::tl_types::Int256::from_str(root_hash)?,
+                file_hash: liteclient::tl_types::Int256::from_str(file_hash)?,
+            })?;
             println!("BlockData: {:?}", result.data.hex_dump());
         }
-        Commands::GetLastBlockInfo{} => {
+        Commands::GetLastBlockInfo {} => {
             let info = (*client).get_masterchain_info()?;
-            let result = (*client).get_block(liteclient::tl_types::BlockIdExt{workchain: info.last.workchain, shard: info.last.shard, seqno: info.last.seqno, root_hash: info.last.root_hash, file_hash: info.last.file_hash})?;
-            println!("Seqno: {}\nBlockData: {:?}", result.id.seqno ,result.data.hex_dump());
+            let result = (*client).get_block(liteclient::tl_types::BlockIdExt {
+                workchain: info.last.workchain,
+                shard: info.last.shard,
+                seqno: info.last.seqno,
+                root_hash: info.last.root_hash,
+                file_hash: info.last.file_hash,
+            })?;
+            println!(
+                "Seqno: {}\nBlockData: {:?}",
+                result.id.seqno,
+                result.data.hex_dump()
+            );
         }
         Commands::Send { file } => {
             let mut data = Vec::<u8>::new();
@@ -124,17 +146,33 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             println!("{:?}", result);
         }
         Commands::LookupBlock { seqno } => {
-            let block = liteclient::tl_types::BlockId{seqno: *seqno, shard: 9223372036854775808, workchain: -1};
+            let block = liteclient::tl_types::BlockId {
+                seqno: *seqno,
+                shard: 9223372036854775808,
+                workchain: -1,
+            };
             let res = (*client).lookup_block(block, None, None).unwrap();
             println!("{:?}", res);
         }
-        Commands::GetState{ file_name} => {
+        Commands::GetState { file_name } => {
             let workchain: i32 = -1;
             let shard: u64 = 9223372036854775808;
             let seqno: u32 = 999;
-            let root_hash = liteclient::tl_types::Int256::from_base64("46ZSUC+ehXaSunL740QURc7T6+o8CqykoT3Pg5Wbfak=").unwrap();
-            let file_hash = liteclient::tl_types::Int256::from_base64("Q8l3/cBazINazII5mOFSGg6/tuqiRKmdA3+Fjlrp/e4=").unwrap();
-            let result = (*client).get_state(liteclient::tl_types::BlockIdExt{workchain, shard, seqno, root_hash: root_hash.clone(), file_hash: file_hash.clone()})?;
+            let root_hash = liteclient::tl_types::Int256::from_base64(
+                "46ZSUC+ehXaSunL740QURc7T6+o8CqykoT3Pg5Wbfak=",
+            )
+            .unwrap();
+            let file_hash = liteclient::tl_types::Int256::from_base64(
+                "Q8l3/cBazINazII5mOFSGg6/tuqiRKmdA3+Fjlrp/e4=",
+            )
+            .unwrap();
+            let result = (*client).get_state(liteclient::tl_types::BlockIdExt {
+                workchain,
+                shard,
+                seqno,
+                root_hash: root_hash.clone(),
+                file_hash: file_hash.clone(),
+            })?;
             let mut file = File::create(&file_name)?;
             file.write_all(&result.id.workchain.to_le_bytes())?;
             file.write_all(&result.id.seqno.to_le_bytes())?;
@@ -143,18 +181,43 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             file.write_all(&result.id.file_hash.0)?;
             file.write_all(&result.data)?;
         }
-        Commands::GetShardInfo{ seqno, workchain } => {
-            let block = (*client).lookup_block(liteclient::tl_types::BlockId { workchain: -1, shard: 9223372036854775808, seqno: *seqno }, None, None)?;
-            let result = (*client).get_shard_info(block.id, *workchain, 9223372036854775808, true)?;
+        Commands::GetShardInfo { seqno, workchain } => {
+            let block = (*client).lookup_block(
+                liteclient::tl_types::BlockId {
+                    workchain: -1,
+                    shard: 9223372036854775808,
+                    seqno: *seqno,
+                },
+                None,
+                None,
+            )?;
+            let result =
+                (*client).get_shard_info(block.id, *workchain, 9223372036854775808, true)?;
             println!("{:?}", &result);
         }
         Commands::GetAllShardsInfo { seqno } => {
-            let block = (*client).lookup_block(liteclient::tl_types::BlockId { workchain: -1, shard: 9223372036854775808, seqno: *seqno }, None, None)?;
+            let block = (*client).lookup_block(
+                liteclient::tl_types::BlockId {
+                    workchain: -1,
+                    shard: 9223372036854775808,
+                    seqno: *seqno,
+                },
+                None,
+                None,
+            )?;
             let result = (*client).get_all_shards_info(block.id)?;
             println!("{:?}", &result);
         }
         Commands::GetBlockProof { seqno } => {
-            let block = (*client).lookup_block(liteclient::tl_types::BlockId { workchain: -1, shard: 9223372036854775808, seqno: *seqno }, None, None)?;
+            let block = (*client).lookup_block(
+                liteclient::tl_types::BlockId {
+                    workchain: -1,
+                    shard: 9223372036854775808,
+                    seqno: *seqno,
+                },
+                None,
+                None,
+            )?;
             let result = (*client).get_block_proof(block.id, None)?;
             println!("{:?}", &result);
         }
@@ -169,9 +232,11 @@ fn main() -> Result<()> {
 
     let config = Config::builder()
         .appender(Appender::builder().build("logfile", Box::new(logfile)))
-        .build(Root::builder()
+        .build(
+            Root::builder()
                 .appender("logfile")
-                .build(LevelFilter::Debug))?;
+                .build(LevelFilter::Debug),
+        )?;
 
     log4rs::init_config(config)?;
     let args = Args::parse();
@@ -186,7 +251,12 @@ fn main() -> Result<()> {
         let response = ureq::get(url).call()
             .map_err(|e| format!("Error occurred while fetching config from {}: {:?}. Use --config if you have local config.", url, e))?;
         if response.status() != 200 {
-            return Err(format!("Url {} responded with error code {}. Use --config if you have local config.", url, response.status()).into());
+            return Err(format!(
+                "Url {} responded with error code {}. Use --config if you have local config.",
+                url,
+                response.status()
+            )
+            .into());
         }
         response.into_string()?
     };

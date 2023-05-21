@@ -1,7 +1,7 @@
-use std::net::{Ipv4Addr, SocketAddrV4};
-use std::ops::{Deref, DerefMut};
 use adnl::AdnlPublicKey;
 use serde::{Deserialize, Serialize};
+use std::net::{Ipv4Addr, SocketAddrV4};
+use std::ops::{Deref, DerefMut};
 use x25519_dalek::PublicKey;
 
 #[serde_with::serde_as]
@@ -11,7 +11,7 @@ pub enum ConfigPublicKey {
     #[serde(rename = "pub.ed25519")]
     Ed25519 {
         #[serde_as(as = "serde_with::base64::Base64")]
-        key: [u8; 32]
+        key: [u8; 32],
     },
 }
 
@@ -24,18 +24,18 @@ pub struct ConfigLiteServer {
     #[serde_as(as = "serde_with::FromInto<i32>")]
     pub ip: LiteServerAddress,
     pub port: u16,
-    pub id: ConfigPublicKey
+    pub id: ConfigPublicKey,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ConfigGlobal {
-    pub liteservers: Vec<ConfigLiteServer>
+    pub liteservers: Vec<ConfigLiteServer>,
 }
 
 impl AdnlPublicKey for ConfigPublicKey {
     fn to_bytes(&self) -> [u8; 32] {
         match self {
-            ConfigPublicKey::Ed25519 { key } => *key
+            ConfigPublicKey::Ed25519 { key } => *key,
         }
     }
 }
