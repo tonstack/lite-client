@@ -231,8 +231,7 @@ mod private {
             lt: Option<i64>,
             utime: Option<i32>,
         ) -> TlDResult<tl_types::BlockHeader> {
-            let trash = 
-            if lt.is_none() && utime.is_none() {
+            let trash = if lt.is_none() && utime.is_none() {
                 Some(0u8)
             } else {
                 None
