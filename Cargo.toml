@@ -1,13 +1,11 @@
 [package]
 name = "liteclient"
-version = "0.1.0"
-authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>"]
+version = "0.2.0"
+authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>", "Timur Kalmykov <lendedland@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-tokio = { features = ['rt-multi-thread'], version = '1.5.0' }
-ton_api = { git = 'https://github.com/tonlabs/ton-labs-tl', package = 'ton_api', tag = '0.2.120' }
-base64 = '0.13.0'
+base64 = "0.13.0"
 pretty-hex = '0.2.1'
 env_logger = '0.9.0'
 log = '0.4.14'
@@ -17,9 +15,11 @@ adnl = { version = "0.1.0", features = ["std", "dalek"] }
 x25519-dalek = "2.0.0-pre.1"
 curve25519-dalek = "4.0.0-pre.2"
 rand = "0.8.5"
-ton_types = { git = 'https://github.com/tonlabs/ton-labs-types', tag = '1.10.12' }
 hex = "0.4.3"
 serde = { version = "1.0.136", features = ["derive"] }
 serde_json = "1.0.79"
 serde_with = { version = "1.12.0", features = ["base64"] }
 ureq = "2.4.0"
+tl-proto = "0.4.2"
+derivative = "2.2.0"
+log4rs = "1.2.0"
