@@ -1,69 +1,23 @@
 pub mod config;
 
-#[cfg(test)]
-mod tests;
+pub mod tl_types;
 
 pub use private::LiteClient;
 pub use private::Result;
-pub use private::DeserializeError;
 
 mod private {
-    use std::error::Error;
-    use ton_api::{AnyBoxedSerialize, deserialize_boxed, serialize_boxed};
-    
-    use ton_api::ton::rpc::lite_server as lite_query;
-    use ton_api::ton::{bytes, TLObject};
-    use ton_api::ton::lite_server::{self as lite_result, MasterchainInfo};
-    use ton_api::ton::adnl as adnl_tl;
-    use ton_api::ton::rpc::lite_server::{GetTime, SendMessage, GetVersion, GetMasterchainInfo};
-    use pretty_hex::PrettyHex;
-    use std::fmt::{Display, Formatter};
-    use std::net::{SocketAddrV4, TcpStream};
-    use ton_types::UInt256;
-    use x25519_dalek::{StaticSecret};
-    use adnl::{AdnlClient, AdnlBuilder};
-    use std::convert::TryInto;
-    use rand::prelude::SliceRandom;
     use crate::config::ConfigGlobal;
-
-
-    #[derive(Debug)]
-    pub struct DeserializeError {
-        object: TLObject,
-    }
-
-    impl Display for DeserializeError {
-        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-            write!(f, "Deserialize error, can't downcast {:?}", self.object)
-        }
-    }
-
-    impl Error for DeserializeError {}
-
-    #[derive(Debug)]
-    pub struct LiteError(lite_result::Error);
-
-    impl Into<lite_result::Error> for LiteError {
-        fn into(self) -> lite_result::Error {
-            self.0
-        }
-    }
-
-    impl From<lite_result::Error> for LiteError {
-        fn from(e: lite_result::Error) -> Self {
-            Self(e)
-        }
-    }
-
-    impl Display for LiteError {
-        fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-            write!(f, "Server error [code={}]: {}", self.0.code(), self.0.message())
-        }
-    }
-
-    impl Error for LiteError {}
+    use crate::tl_types;
+    use adnl::{AdnlBuilder, AdnlClient};
+    use pretty_hex::PrettyHex;
+    use rand::prelude::SliceRandom;
+    use std::error::Error;
+    use std::net::TcpStream;
+    use tl_proto::{TlRead, TlWrite};
+    use x25519_dalek::StaticSecret;
 
     pub type Result<T> = std::result::Result<T, Box<dyn Error>>;
+    pub type TlDResult<T> = std::result::Result<T, tl_types::Error>;
 
     pub struct LiteClient {
         client: AdnlClient<TcpStream>,
@@ -77,45 +31,307 @@ mod private {
             let transport = TcpStream::connect(ls.socket_addr())?;
             let client = AdnlBuilder::with_random_aes_params(&mut rand::rngs::OsRng)
                 .perform_ecdh(local_secret, ls.id.clone())
-                .perform_handshake(transport).map_err(|e| format!("{:?}", e))?;
+                .perform_handshake(transport)
+                .map_err(|e| format!("{:?}", e))?;
             Ok(Self { client })
         }
+        pub fn lite_query<'tl, T, U>(
+            &mut self,
+            request: T,
+            response: &'tl mut Vec<u8>,
+        ) -> TlDResult<U>
+        where
+            T: TlWrite,
+            U: TlRead<'tl>,
+        {
+            log::debug!("struct:\n{:x?}", tl_proto::serialize(&request));
+            let mut message = tl_proto::serialize(tl_types::Message::Query {
+                query_id: (tl_types::Int256(rand::random())),
+                query: (tl_proto::serialize(tl_types::Query {
+                    data: (tl_proto::serialize(request)),
+                })),
+            });
 
-        pub fn lite_query<T: AnyBoxedSerialize, U: AnyBoxedSerialize>(&mut self, request: T) -> Result<U> {
-            let mut message = serialize_boxed(&TLObject::new(adnl_tl::Message::Adnl_Message_Query(adnl_tl::message::message::Query {
-                query_id: UInt256::with_array(rand::random()),
-                query: bytes(serialize_boxed(
-                    &TLObject::new(lite_query::Query {
-                        data: bytes(serialize_boxed(&TLObject::new(request))?)
-                    })
-                )?),
-            })))?;
-            log::debug!("Sending query:\n{:?}", message.hex_dump());
-            self.client.send(&mut message, &mut rand::random()).map_err(|e| format!("{:?}", e))?;
-            let mut answer = Vec::<u8>::new();
-            self.client.receive::<_, 8192>(&mut answer).map_err(|e| format!("{:?}", e))?;
-            let result = deserialize_boxed(&answer)?.downcast::<adnl_tl::Message>().map_err(|o| Box::new(DeserializeError { object: o }))?;
-            let result_obj = deserialize_boxed(&result.answer().unwrap().0)?;
-            log::debug!("Received:\n{:?}", answer.hex_dump());
-            result_obj.downcast::<U>().map_err(|e| {
-                e.downcast::<lite_result::Error>().map(|e| Box::new(LiteError::from(e)).into())
-                    .unwrap_or_else(|o| Box::new(DeserializeError { object: o }).into())
-            })
-        }
-        pub fn get_masterchain_info(&mut self) -> Result<lite_result::MasterchainInfo> {
-            self.lite_query(GetMasterchainInfo)
-        }
-
-        pub fn get_time(&mut self) -> Result<lite_result::CurrentTime> {
-            self.lite_query(GetTime)
-        }
-
-        pub fn get_version(&mut self) -> Result<lite_result::Version> {
-            self.lite_query(GetVersion)
+            log::debug!("Sending query:\n{:?}", &message.hex_dump());
+            self.client
+                .send(&mut message, &mut rand::random())
+                .map_err(|e| format!("{:?}", e))
+                .unwrap();
+            log::debug!("Query sent");
+            self.client
+                .receive::<_, 8192>(response)
+                .map_err(|e| format!("{:?}", e))
+                .unwrap();
+            log::debug!("Received:\n{:?}", &response.hex_dump());
+            let data = tl_proto::deserialize::<tl_types::Message>(response).unwrap();
+            if let tl_types::Message::Answer {
+                query_id: _,
+                answer,
+            } = data
+            {
+                *response = answer;
+            } else {
+                panic!();
+            }
+            log::debug!("Unpacked:\n{:?}", &response.hex_dump());
+            let result = tl_proto::deserialize::<U>(response);
+            if let Ok(result) = result {
+                Ok(result)
+            } else {
+                Err(tl_proto::deserialize::<tl_types::Error>(response).unwrap())
+            }
         }
 
-        pub fn send_external_message(&mut self, message: Vec<u8>) -> Result<lite_result::SendMsgStatus> {
-            self.lite_query::<_, lite_result::SendMsgStatus>(SendMessage { body: bytes(message) })
+        pub fn get_masterchain_info(&mut self) -> TlDResult<tl_types::MasterchainInfo> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetMasterchainInfo, &mut response)
+                as TlDResult<tl_types::MasterchainInfo>
+        }
+
+        pub fn get_masterchain_info_ext(
+            &mut self,
+            mode: i32,
+        ) -> TlDResult<tl_types::MasterchainInfoExt> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetMasterchainInfoExt { mode }, &mut response)
+                as TlDResult<tl_types::MasterchainInfoExt>
+        }
+
+        pub fn get_time(&mut self) -> TlDResult<tl_types::CurrentTime> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetTime, &mut response) as TlDResult<tl_types::CurrentTime>
+        }
+
+        pub fn get_version(&mut self) -> TlDResult<tl_types::Version> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetVersion, &mut response) as TlDResult<tl_types::Version>
+        }
+
+        pub fn get_block(&mut self, id: tl_types::BlockIdExt) -> TlDResult<tl_types::BlockData> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetBlock { id }, &mut response)
+                as TlDResult<tl_types::BlockData>
+        }
+
+        pub fn get_state(&mut self, id: tl_types::BlockIdExt) -> TlDResult<tl_types::BlockState> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetState { id }, &mut response)
+                as TlDResult<tl_types::BlockState>
+        }
+
+        pub fn get_block_header(
+            &mut self,
+            id: tl_types::BlockIdExt,
+            mode: i32,
+        ) -> TlDResult<tl_types::BlockHeader> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetBlockHeader { id, mode }, &mut response)
+                as TlDResult<tl_types::BlockHeader>
+        }
+
+        pub fn send_message(&mut self, body: Vec<u8>) -> TlDResult<tl_types::SendMsgStatus> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::SendMessage { body }, &mut response)
+                as TlDResult<tl_types::SendMsgStatus>
+        }
+
+        pub fn get_account_state(
+            &mut self,
+            id: tl_types::BlockIdExt,
+            account: tl_types::AccountId,
+        ) -> TlDResult<tl_types::AccountState> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetAccountState { id, account }, &mut response)
+                as TlDResult<tl_types::AccountState>
+        }
+
+        pub fn run_smc_method(
+            &mut self,
+            id: tl_types::BlockIdExt,
+            account: tl_types::AccountId,
+            method_id: i64,
+            params: Vec<u8>,
+        ) -> TlDResult<tl_types::RunMethodResult> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::RunSmcMethod {
+                    mode: (),
+                    id,
+                    account,
+                    method_id,
+                    params,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::RunMethodResult>
+        }
+
+        pub fn get_shard_info(
+            &mut self,
+            id: tl_types::BlockIdExt,
+            workchain: i32,
+            shard: u64,
+            exact: bool,
+        ) -> TlDResult<tl_types::ShardInfo> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::GetShardInfo {
+                    id,
+                    workchain,
+                    shard,
+                    exact,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::ShardInfo>
+        }
+
+        pub fn get_all_shards_info(
+            &mut self,
+            id: tl_types::BlockIdExt,
+        ) -> TlDResult<tl_types::AllShardsInfo> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetAllShardsInfo { id }, &mut response)
+                as TlDResult<tl_types::AllShardsInfo>
+        }
+
+        pub fn get_one_transaction(
+            &mut self,
+            id: tl_types::BlockIdExt,
+            account: tl_types::AccountId,
+            lt: i64,
+        ) -> TlDResult<tl_types::TransactionInfo> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::GetOneTransaction { id, account, lt },
+                &mut response,
+            ) as TlDResult<tl_types::TransactionInfo>
+        }
+
+        pub fn get_transactions(
+            &mut self,
+            count: i32,
+            account: tl_types::AccountId,
+            lt: i64,
+            hash: tl_types::Int256,
+        ) -> TlDResult<tl_types::TransactionList> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::GetTransactions {
+                    count,
+                    account,
+                    lt,
+                    hash,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::TransactionList>
+        }
+
+        pub fn lookup_block(
+            &mut self,
+            id: tl_types::BlockId,
+            lt: Option<i64>,
+            utime: Option<i32>,
+        ) -> TlDResult<tl_types::BlockHeader> {
+            let trash = if lt.is_none() && utime.is_none() {
+                Some(0u8)
+            } else {
+                None
+            };
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::LookupBlock {
+                    mode: (),
+                    trash,
+                    id,
+                    lt,
+                    utime,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::BlockHeader>
+        }
+
+        pub fn list_block_transactions(
+            &mut self,
+            id: tl_types::BlockIdExt,
+            count: i32,
+            after: Option<tl_types::TransactionId3>,
+            reverse_order: Option<tl_types::True>,
+            want_proof: Option<tl_types::True>,
+        ) -> TlDResult<tl_types::BlockTransactions> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::ListBlockTransactions {
+                    id,
+                    mode: (),
+                    count,
+                    after,
+                    reverse_order,
+                    want_proof,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::BlockTransactions>
+        }
+
+        pub fn get_block_proof(
+            &mut self,
+            known_block: tl_types::BlockIdExt,
+            target_block: Option<tl_types::BlockIdExt>,
+        ) -> TlDResult<tl_types::PartialBlockProof> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::GetBlockProof {
+                    mode: (),
+                    known_block,
+                    target_block,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::PartialBlockProof>
+        }
+
+        pub fn get_config_all(
+            &mut self,
+            mode: i32,
+            id: tl_types::BlockIdExt,
+        ) -> TlDResult<tl_types::ConfigInfo> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(tl_types::GetConfigAll { mode, id }, &mut response)
+                as TlDResult<tl_types::ConfigInfo>
+        }
+
+        pub fn get_config_params(
+            &mut self,
+            mode: i32,
+            id: tl_types::BlockIdExt,
+            param_list: Vec<i32>,
+        ) -> TlDResult<tl_types::ConfigInfo> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::GetConfigParams {
+                    mode,
+                    id,
+                    param_list,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::ConfigInfo>
+        }
+
+        pub fn get_validator_stats(
+            &mut self,
+            id: tl_types::BlockIdExt,
+            limit: i32,
+            start_after: Option<tl_types::Int256>,
+            modified_after: Option<i32>,
+        ) -> TlDResult<tl_types::ValidatorStats> {
+            let mut response = Vec::<u8>::new();
+            self.lite_query(
+                tl_types::GetValidatorStats {
+                    mode: (),
+                    id,
+                    limit,
+                    start_after,
+                    modified_after,
+                },
+                &mut response,
+            ) as TlDResult<tl_types::ValidatorStats>
         }
     }
 }
