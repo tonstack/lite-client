@@ -75,8 +75,8 @@ mod private {
             }
             log::debug!("Unpacked:\n{:?}", &response.hex_dump());
             let result = tl_proto::deserialize::<U>(response);
-            if result.is_ok() {
-                Ok(result.unwrap())
+            if let Ok(result) = result {
+                Ok(result)
             } else {
                 Err(tl_proto::deserialize::<tl_types::Error>(response).unwrap())
             }
@@ -231,12 +231,12 @@ mod private {
             lt: Option<i64>,
             utime: Option<i32>,
         ) -> TlDResult<tl_types::BlockHeader> {
-            let trash: Option<u8>;
+            let trash = 
             if lt.is_none() && utime.is_none() {
-                trash = Some(0);
+                Some(0u8)
             } else {
-                trash = None;
-            }
+                None
+            };
             let mut response = Vec::<u8>::new();
             self.lite_query(
                 tl_types::LookupBlock {

@@ -384,9 +384,7 @@ fn lookup_block_test() {
     let res2 = client
         .lookup_block(empty_block.clone(), Some(lt), None)
         .unwrap();
-    let res3 = client
-        .lookup_block(empty_block, None, Some(utime))
-        .unwrap();
+    let res3 = client.lookup_block(empty_block, None, Some(utime)).unwrap();
     assert_eq!(res1, res2);
     assert_eq!(res1, res3);
 }

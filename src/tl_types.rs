@@ -82,8 +82,8 @@ impl Int256 {
     }
     pub fn from_base64(s: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let res = base64::decode(s);
-        if res.is_ok() {
-            Ok(Self(res.unwrap().try_into().unwrap()))
+        if let Ok(res) = res {
+            Ok(Self(res.try_into().unwrap()))
         } else {
             let res = base64::decode_config(s, base64::URL_SAFE);
             Ok(Self(res.unwrap().try_into().unwrap()))
