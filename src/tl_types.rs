@@ -18,10 +18,12 @@ pub fn fmt_string(bytes: &[u8], f: &mut std::fmt::Formatter) -> Result<(), std::
         std::string::String::from_utf8(bytes.to_vec()).unwrap()
     )
 }
+
 /// string ? = String;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct String(#[derivative(Debug(format_with = "fmt_string"))] Vec<u8>);
+
 impl fmt::Display for String {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -31,6 +33,7 @@ impl fmt::Display for String {
         )
     }
 }
+
 impl String {
     pub fn new(str: std::string::String) -> Self {
         Self(str.into_bytes())
@@ -41,12 +44,14 @@ impl String {
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Int128(#[derivative(Debug(format_with = "fmt_bytes"))] pub [u8; 16]);
+
 impl FromStr for Int128 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Int128(<[u8; 16]>::from_hex(s).unwrap()))
     }
     type Err = FromHexError;
 }
+
 impl ToString for Int128 {
     fn to_string(&self) -> std::string::String {
         hex::encode(self.0)
@@ -57,6 +62,7 @@ impl ToString for Int128 {
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Int256(#[derivative(Debug(format_with = "fmt_bytes"))] pub [u8; 32]);
+
 impl FromStr for Int256 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let res = Self::from_hex(s);
@@ -68,18 +74,22 @@ impl FromStr for Int256 {
     }
     type Err = Box<dyn std::error::Error>;
 }
+
 impl ToString for Int256 {
     fn to_string(&self) -> std::string::String {
         hex::encode(self.0)
     }
 }
+
 impl Int256 {
     pub fn to_hex(&self) -> std::string::String {
         hex::encode(self.0)
     }
+
     pub fn from_hex(s: &str) -> Result<Self, Box<dyn std::error::Error>> {
         Ok(Int256(<[u8; 32]>::from_hex(s).unwrap()))
     }
+
     pub fn from_base64(s: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let res = base64::decode(s);
         if let Ok(res) = res {
@@ -89,6 +99,7 @@ impl Int256 {
             Ok(Self(res.unwrap().try_into().unwrap()))
         }
     }
+
     pub fn to_base64(&self) -> std::string::String {
         base64::encode(self.0)
     }
@@ -124,6 +135,12 @@ pub struct BlockIdExt {
     pub seqno: u32,
     pub root_hash: Int256,
     pub file_hash: Int256,
+}
+
+impl fmt::Display for BlockIdExt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({},{:X},{}):{}:{}", self.workchain, self.shard, self.seqno, self.root_hash.to_string(), self.file_hash.to_string())
+    }
 }
 
 /// tonNode.zeroStateIdExt workchain:int root_hash:int256 file_hash:int256 = tonNode.ZeroStateIdExt;

@@ -538,6 +538,7 @@ dependencies = [
  "log4rs",
  "pretty-hex",
  "rand",
+ "regex",
  "serde",
  "serde_json",
  "serde_with",

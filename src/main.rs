@@ -1,12 +1,14 @@
 pub mod tl_types;
 use chrono::{DateTime, Utc};
 use clap::{Parser, Subcommand};
+use liteclient::tl_types::{BlockIdExt, Int256};
 use liteclient::LiteClient;
 use log::LevelFilter;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Config, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use pretty_hex::PrettyHex;
+use regex::Regex;
 use std::error::Error;
 use std::fs::{read_to_string, File};
 use std::io::{stdin, Read, Write};
@@ -43,26 +45,32 @@ enum Commands {
         /// File to send
         file: PathBuf,
     },
-    /// Get time from liteserver
+    /// Get server time
     GetTime,
-    /// Get version from liteserver
+    /// Shows server time, version and capabilities
     GetVersion,
-    /// Get masterchainInfo
+    /// Get masterchain info
     GetMasterchainInfo,
+    /// Get masterchain info with additional data
     GetMasterchainInfoExt,
+    /// Downloads and dumps specified block
     #[clap(arg_required_else_help = true)]
     GetBlock {
-        shard: u64,
-        seqno: u32,
-        root_hash: String,
-        file_hash: String,
+        #[clap(value_parser = parse_block_id_ext)]
+        block_id_ext: BlockIdExt,
     },
-    GetLastBlockInfo,
     GetAccountState {
-        s: String,
+        base64_address: String,
     },
     LookupBlock {
-        seqno: u32,
+        workchain: i32,
+        shard: u64,
+        #[clap(short, long, group = "lookup-variant")]
+        seqno: Option<u32>,
+        #[clap(short, long, group = "lookup-variant")]
+        ltime: Option<i64>,
+        #[clap(short, long, group = "lookup-variant")]
+        utime: Option<i32>,
     },
     GetState {
         file_name: String,
@@ -79,11 +87,25 @@ enum Commands {
     },
 }
 
+fn parse_block_id_ext(s: &str) -> std::result::Result<BlockIdExt, String> {
+    let re = Regex::new(r"\(([-]?\d+),([a-fA-F0-9]+),(\d+)\):([^:]+):(.+)").unwrap();
+
+    if let Some(capture) = re.captures(s) {
+        let workchain = capture[1].parse::<i32>().map_err(|e| format!("Can't parse workchain '{}': {:?}", &capture[1], e))?;
+        let shard = u64::from_str_radix(&capture[2], 16).map_err(|e| format!("Can't parse shard '{}': {:?}", &capture[2], e))?;
+        let seqno = capture[3].parse::<u32>().map_err(|e| format!("Can't parse seqno '{}': {:?}", &capture[3], e))?;
+        let root_hash = Int256::from_str(&capture[4]).map_err(|e| format!("Can't parse root_hash '{}': {:?}", &capture[4], e))?;
+        let file_hash = Int256::from_str(&capture[5]).map_err(|e| format!("Can't parse root_hash '{}': {:?}", &capture[5], e))?;
+        Ok(BlockIdExt { workchain, shard, seqno, root_hash, file_hash })
+    } else {
+        Err("Wrong format, must be (workchain,shard_hex,seqno)".into())
+    }
+}
+
 fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
     match command {
         Commands::GetTime => {
             let result = (*client).get_time()?.now as u64;
-            log::debug!("time: {}", result);
             let time = DateTime::<Utc>::from(UNIX_EPOCH + Duration::from_secs(result));
             println!("Current time: {} => {:?}", result, time);
         }
@@ -93,41 +115,17 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
         }
         Commands::GetMasterchainInfo => {
             let result = (*client).get_masterchain_info()?;
-            println!("Last Block: {:?}", result);
+            println!("{:#?}\n", result);
+            println!("Last masterchain BlockIdExt: {}", result.last);
         }
         Commands::GetMasterchainInfoExt => {
             let result = (*client).get_masterchain_info_ext(0)?;
-            println!("Last Block: {:?}", result);
+            println!("{:#?}\n", result);
+            println!("Last masterchain BlockIdExt: {}", result.last);
         }
-        Commands::GetBlock {
-            shard,
-            seqno,
-            root_hash,
-            file_hash,
-        } => {
-            let result = (*client).get_block(liteclient::tl_types::BlockIdExt {
-                workchain: -1,
-                shard: *shard,
-                seqno: *seqno,
-                root_hash: liteclient::tl_types::Int256::from_str(root_hash)?,
-                file_hash: liteclient::tl_types::Int256::from_str(file_hash)?,
-            })?;
+        Commands::GetBlock { block_id_ext } => {
+            let result = (*client).get_block(block_id_ext.clone())?;
             println!("BlockData: {:?}", result.data.hex_dump());
-        }
-        Commands::GetLastBlockInfo {} => {
-            let info = (*client).get_masterchain_info()?;
-            let result = (*client).get_block(liteclient::tl_types::BlockIdExt {
-                workchain: info.last.workchain,
-                shard: info.last.shard,
-                seqno: info.last.seqno,
-                root_hash: info.last.root_hash,
-                file_hash: info.last.file_hash,
-            })?;
-            println!(
-                "Seqno: {}\nBlockData: {:?}",
-                result.id.seqno,
-                result.data.hex_dump()
-            );
         }
         Commands::Send { file } => {
             let mut data = Vec::<u8>::new();
@@ -139,20 +137,27 @@ fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<()> {
             let result = client.send_message(data)?;
             println!("result = {:?}", result);
         }
-        Commands::GetAccountState { s } => {
+        Commands::GetAccountState { base64_address } => {
             let info = (*client).get_masterchain_info_ext(0)?;
-            let acc = liteclient::tl_types::AccountId::from_friendly(s)?;
-            let result = (*client).get_account_state(info.last, acc);
-            println!("{:?}", result);
+            let acc = liteclient::tl_types::AccountId::from_friendly(base64_address)?;
+            let result = (*client).get_account_state(info.last, acc)?;
+            println!("{:#?}", result);
         }
-        Commands::LookupBlock { seqno } => {
+        Commands::LookupBlock {
+            seqno,
+            ltime,
+            utime,
+            workchain,
+            shard,
+        } => {
             let block = liteclient::tl_types::BlockId {
-                seqno: *seqno,
-                shard: 9223372036854775808,
-                workchain: -1,
+                seqno: if let Some(seqno) = seqno { *seqno } else { 0 },
+                shard: *shard,
+                workchain: *workchain,
             };
-            let res = (*client).lookup_block(block, None, None).unwrap();
-            println!("{:?}", res);
+            let res = (*client).lookup_block(block, *ltime, *utime).unwrap();
+            println!("{:#?}\n", res);
+            println!("BlockIdExt: {}", res.id);
         }
         Commands::GetState { file_name } => {
             let workchain: i32 = -1;
