@@ -1,8 +1,11 @@
-use adnl::AdnlPublicKey;
 use serde::{Deserialize, Serialize};
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::ops::{Deref, DerefMut};
+use std::str::FromStr;
+#[cfg(feature = "dalek")]
 use x25519_dalek::PublicKey;
+#[cfg(feature = "adnl")]
+use adnl::AdnlPublicKey;
 
 #[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -32,17 +35,20 @@ pub struct ConfigGlobal {
     pub liteservers: Vec<ConfigLiteServer>,
 }
 
+impl FromStr for ConfigGlobal {
+    type Err = serde_json::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        serde_json::from_str(s)
+    }
+}
+
+#[cfg(feature = "adnl")]
 impl AdnlPublicKey for ConfigPublicKey {
     fn to_bytes(&self) -> [u8; 32] {
         match self {
             ConfigPublicKey::Ed25519 { key } => *key,
         }
-    }
-}
-
-impl From<ConfigPublicKey> for PublicKey {
-    fn from(public: ConfigPublicKey) -> Self {
-        Self::from(public.to_bytes())
     }
 }
 

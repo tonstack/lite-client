@@ -1,26 +1,7 @@
-[package]
-name = "liteclient"
-version = "0.2.0"
-authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>", "Timur Kalmykov <lendedland@gmail.com>"]
-edition = "2021"
+[workspace]
 
-[dependencies]
-base64 = "0.13.0"
-pretty-hex = '0.2.1'
-env_logger = '0.9.0'
-log = '0.4.14'
-clap = { version = "3.2.25", features = ["derive"] }
-chrono = "0.4.19"
-adnl = { version = "0.1.0", features = ["std", "dalek"] }
-x25519-dalek = "2.0.0-pre.1"
-curve25519-dalek = "4.0.0-pre.2"
-rand = "0.8.5"
-hex = "0.4.3"
-serde = { version = "1.0.136", features = ["derive"] }
-serde_json = "1.0.79"
-serde_with = { version = "1.12.0", features = ["base64"] }
-ureq = "2.4.0"
-tl-proto = "0.4.2"
-derivative = "2.2.0"
-log4rs = "1.2.0"
-regex = "1"
+members = [
+    "cli",
+    "liteapi",
+    "network-config",
+]
