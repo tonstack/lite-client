@@ -1,12 +1,14 @@
-# TON LiteClient
+# TON liteapi
 
-An attempt to rewrite [lite-client](https://github.com/ton-blockchain/ton/tree/master/lite-client) for TON Blockchain in Rust using our [ADNL library](https://github.com/tonstack/adnl-rs).
+Implementation of [lite_api](https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/lite_api.tl) and [lite-client](https://github.com/ton-blockchain/ton/tree/master/lite-client) in Rust using [adnl-rs](https://github.com/tonstack/adnl-rs).
 
-## Roadmap
-- [x] Implement own ADNL library instead of using Everscale
-- [x] Write documentation for ADNL protocol
-- [ ] Implement TL messages serialization
-- [ ] Implement all functions of the original lite-client
+| Feature       | Status                           |
+| ------------- | -------------------------------- |
+| ADNL Client   | ✅ Implemented                  |
+| ADNL Server   | ❌ Not implemented              |
+| ADNL P2P      | ❌ Not implemented              |
+| async         | ❌ Not implemented              |
+| ed25519 libs  | curve25519_dalek + x25519_dalek  |
 
 ## Installation
 ```bash
@@ -14,7 +16,7 @@ cargo install --git https://github.com/tonstack/lite-client
 ```
 
 ## Usage
-Without any options, [mainnet config](https://newton-blockchain.github.io/global.config.json) will be used.
+Without any options, [mainnet config](https://ton.org/global.config.json) will be used.
 For testnet, use `-t / --testnet` flag.
 To use your own config, pass `-c / --config <FILE>` option. 
 
