@@ -1,6 +1,5 @@
-use base64;
 use derivative::Derivative;
-use hex::{FromHex, FromHexError};
+use hex::FromHex;
 use std::string::ToString;
 use std::{fmt, str::FromStr, *};
 use tl_proto::{TlRead, TlWrite};
@@ -18,10 +17,12 @@ pub fn fmt_string(bytes: &[u8], f: &mut std::fmt::Formatter) -> Result<(), std::
         std::string::String::from_utf8(bytes.to_vec()).unwrap()
     )
 }
+
 /// string ? = String;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct String(#[derivative(Debug(format_with = "fmt_string"))] Vec<u8>);
+
 impl fmt::Display for String {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -31,25 +32,10 @@ impl fmt::Display for String {
         )
     }
 }
+
 impl String {
     pub fn new(str: std::string::String) -> Self {
         Self(str.into_bytes())
-    }
-}
-
-/// int128 4*[ int ] = Int128;
-#[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
-pub struct Int128(#[derivative(Debug(format_with = "fmt_bytes"))] pub [u8; 16]);
-impl FromStr for Int128 {
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Int128(<[u8; 16]>::from_hex(s).unwrap()))
-    }
-    type Err = FromHexError;
-}
-impl ToString for Int128 {
-    fn to_string(&self) -> std::string::String {
-        hex::encode(self.0)
     }
 }
 
@@ -57,40 +43,27 @@ impl ToString for Int128 {
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Int256(#[derivative(Debug(format_with = "fmt_bytes"))] pub [u8; 32]);
+
 impl FromStr for Int256 {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let res = Self::from_hex(s);
-        if res.is_ok() {
-            res
-        } else {
-            Self::from_base64(s)
-        }
+        Self::from_hex(s)
     }
-    type Err = Box<dyn std::error::Error>;
+    type Err = hex::FromHexError;
 }
+
 impl ToString for Int256 {
     fn to_string(&self) -> std::string::String {
         hex::encode(self.0)
     }
 }
+
 impl Int256 {
     pub fn to_hex(&self) -> std::string::String {
         hex::encode(self.0)
     }
-    pub fn from_hex(s: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        Ok(Int256(<[u8; 32]>::from_hex(s).unwrap()))
-    }
-    pub fn from_base64(s: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let res = base64::decode(s);
-        if let Ok(res) = res {
-            Ok(Self(res.try_into().unwrap()))
-        } else {
-            let res = base64::decode_config(s, base64::URL_SAFE);
-            Ok(Self(res.unwrap().try_into().unwrap()))
-        }
-    }
-    pub fn to_base64(&self) -> std::string::String {
-        base64::encode(self.0)
+
+    pub fn from_hex(s: &str) -> Result<Self, hex::FromHexError> {
+        Ok(Int256(<[u8; 32]>::from_hex(s)?))
     }
 }
 
@@ -124,6 +97,12 @@ pub struct BlockIdExt {
     pub seqno: u32,
     pub root_hash: Int256,
     pub file_hash: Int256,
+}
+
+impl fmt::Display for BlockIdExt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({},{:X},{}):{}:{}", self.workchain, self.shard, self.seqno, self.root_hash.to_string(), self.file_hash.to_string())
+    }
 }
 
 /// tonNode.zeroStateIdExt workchain:int root_hash:int256 file_hash:int256 = tonNode.ZeroStateIdExt;
@@ -179,17 +158,6 @@ impl std::error::Error for Error {}
 pub struct AccountId {
     pub workchain: i32,
     pub id: Int256,
-}
-impl AccountId {
-    pub fn from_friendly(s: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let res = base64::decode_config(s, base64::URL_SAFE)?;
-        let workchain = res[1] as i8;
-        let id = Int256((&res[2..34]).try_into().unwrap());
-        Ok(AccountId {
-            workchain: workchain.into(),
-            id,
-        })
-    }
 }
 
 /// liteServer.masterchainInfo last:tonNode.blockIdExt state_root_hash:int256 init:tonNode.zeroStateIdExt = liteServer.MasterchainInfo;
