@@ -1,14 +1,13 @@
-# TON liteapi
+# TON lite_api
 
 Implementation of [lite_api](https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/lite_api.tl) and [lite-client](https://github.com/ton-blockchain/ton/tree/master/lite-client) in Rust using [adnl-rs](https://github.com/tonstack/adnl-rs).
 
-| Feature       | Status                           |
-| ------------- | -------------------------------- |
-| ADNL Client   | ✅ Implemented                  |
-| ADNL Server   | ❌ Not implemented              |
-| ADNL P2P      | ❌ Not implemented              |
-| async         | ❌ Not implemented              |
-| ed25519 libs  | curve25519_dalek + x25519_dalek  |
+| Feature           | Status                           |
+| ----------------- | -------------------------------- |
+| lite_api client   | ✅ Implemented                  |
+| lite_api server   | ❌ Not implemented              |
+| lite-client cli   | ✅ Implemented                  |
+| async             | ❌ Not implemented              |
 
 ## Installation
 ```bash
