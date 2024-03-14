@@ -7,7 +7,6 @@ use tl_proto::{TlRead, TlWrite};
 /// true = True;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
-#[tl(boxed, id = "true", scheme_inline = r##"true = True;"##)]
 pub struct True;
 
 pub fn fmt_string(bytes: &[u8], f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {

@@ -55,20 +55,16 @@ impl LiteRequest {
     }
 
     pub fn deserialize(buf: &[u8]) -> Result<LiteRequest, LiteError> {
-        let data = tl_proto::deserialize::<tl_types::Message>(response)
-                .map_err(|e| LiteError::TlError(e))?;
-            match data {
-                tl_types::Message::Answer {
-                    query_id: _,
-                    answer,
-                } => {
-                    *response = answer;
-                }
+        let data = tl_proto::deserialize::<Message>(buf).map_err(|e| LiteError::TlError(e))?;
+            let (query_id, answer) = match data {
+                Message::Answer { query_id, answer } => (query_id, answer),
                 msg => {
                     log::error!("Got wrong adnl.Message type from server, expected adnl.message.answer:\n{:#?}", msg);
-                    return Err(LiteError::NotLiteAnswer);
+                    return Err(LiteError::UnexpectedMessage);
                 }
-            }
+            };
+
+            tl_proto::deserialize(packet)
 
             // deserialize actual answer or deserialize error if any
             let result = tl_proto::deserialize::<U>(response).or_else(|e| {
