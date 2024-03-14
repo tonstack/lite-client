@@ -718,8 +718,8 @@ pub struct LookupBlock {
     #[tl(flags)]
     pub mode: (),
     pub id: BlockId,
-    #[tl(skip, flags_bit = "mode.0")]
-    pub trash: Option<u8>,
+    //#[tl(skip, flags_bit = "mode.0")]
+    //pub trash: Option<u8>,
     #[tl(flags_bit = "mode.1")]
     pub lt: Option<i64>,
     #[tl(flags_bit = "mode.2")]
