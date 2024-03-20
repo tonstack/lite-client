@@ -1,2 +1,4 @@
-pub mod tl_types;
-pub mod protocol;
+pub mod tl;
+pub mod types;
+pub mod client;
+pub mod server;

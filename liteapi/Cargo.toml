@@ -4,11 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-adnl = { git = "https://github.com/tonstack/adnl-rs", branch = "server" }
-tl-proto = "0.4.2"
+adnl = { git = "https://github.com/tonstack/adnl-rs", branch = "server", features = ["dalek"] }
+tl-proto = { git = "https://github.com/hacker-volodya/tl-proto" }
 derivative = "2.2.0"
 log = '0.4.14'
 hex = "0.4.3"
 thiserror = "1"
 tokio = { version = "1.36", features = ["net", "io-util"] }
-tower-service = "0.3.2"
+tower = { version = "0.4.13", features = ["make", "util"] }
+rand = "0.8.5"
+
+[dev-dependencies]
+ureq = "2.4.0"
+base64 = "0.13.0"
+x25519-dalek = { version = "2.0.1", features = ["static_secrets"] }
+tokio = { version = "1.36", features = ["full"] }
