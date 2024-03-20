@@ -12,7 +12,7 @@ use super::utils::*;
     id = "liteServer.query",
     scheme_inline = r##"liteServer.query data:bytes = Object;"##
 )]
-pub struct Query {
+pub struct LiteQuery {
     #[tl(with = "struct_as_bytes")]
     pub wrapped_request: WrappedRequest,
 }
