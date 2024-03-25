@@ -1,7 +1,14 @@
 use tl_proto::{TlRead, TlResult};
 
 pub fn lossy_read<'tl, T: TlRead<'tl>>(packet: &'tl [u8], offset: &mut usize) -> TlResult<Option<T>> {
-    Ok(T::read_from(packet, offset).ok())
+    let orig_offset = *offset;
+    let result = T::read_from(packet, offset);
+    if let Ok(x) = result {
+        Ok(Some(x))
+    } else {
+        *offset = orig_offset;
+        Ok(None)
+    }
 }
 
 pub fn fmt_string(bytes: &[u8], f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {

@@ -1,5 +1,5 @@
 use core::fmt;
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use derivative::Derivative;
 use hex::FromHex;
@@ -34,7 +34,7 @@ impl String {
 
 /// int256 8*[ int ] = Int256;
 #[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
+#[derivative(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Int256(#[derivative(Debug(format_with = "fmt_bytes"))] pub [u8; 32]);
 
 impl FromStr for Int256 {
@@ -44,9 +44,9 @@ impl FromStr for Int256 {
     type Err = hex::FromHexError;
 }
 
-impl ToString for Int256 {
-    fn to_string(&self) -> std::string::String {
-        hex::encode(self.0)
+impl Display for Int256 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.to_hex())
     }
 }
 

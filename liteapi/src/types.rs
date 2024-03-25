@@ -3,7 +3,7 @@ use thiserror::Error;
 use tl_proto::TlError;
 use tower::Service;
 
-use crate::tl::{request::{Request, WrappedRequest}, response::Response};
+use crate::tl::{request::WrappedRequest, response::Response};
 
 #[derive(Debug, Error)]
 pub enum LiteError {
@@ -13,10 +13,8 @@ pub enum LiteError {
     TlError(TlError),
     #[error("Unexpected TL message")]
     UnexpectedMessage,
-    #[error("ADNL error")]
-    AdnlError(AdnlError),
-    #[error("IO error")]
-    IoError(std::io::Error),
+    #[error("Transport error")]
+    TransportError(AdnlError),
 }
 
 pub trait LiteService: Service<WrappedRequest, Response = Response, Error = LiteError>{}
