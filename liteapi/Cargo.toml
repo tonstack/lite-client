@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 adnl = { git = "https://github.com/tonstack/adnl-rs", branch = "server", features = ["dalek"] }
-tl-proto = { git = "https://github.com/hacker-volodya/tl-proto" }
+tl-proto = "0.4.5"
 derivative = "2.2.0"
 log = '0.4.14'
 hex = "0.4.3"

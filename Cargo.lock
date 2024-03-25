@@ -1191,8 +1191,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tl-proto"
-version = "0.4.4"
-source = "git+https://github.com/hacker-volodya/tl-proto#83a9987a8d828528459914b56f4e0eec1c00c6e5"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d4da430e55186abb18b4d1457a23eb0765af0dee66a9f741d652d6eaa476a8d7"
 dependencies = [
  "bytes",
  "digest",
@@ -1204,8 +1205,9 @@ dependencies = [
 
 [[package]]
 name = "tl-proto-proc"
-version = "0.4.3"
-source = "git+https://github.com/hacker-volodya/tl-proto#83a9987a8d828528459914b56f4e0eec1c00c6e5"
+version = "0.4.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a3eaf6822a3ce34a40564dd3078a915d35c3c5fd1f6b3d81eab991e6d00a0fb"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1217,7 +1219,8 @@ dependencies = [
 [[package]]
 name = "tl-scheme"
 version = "0.2.0"
-source = "git+https://github.com/hacker-volodya/tl-proto#83a9987a8d828528459914b56f4e0eec1c00c6e5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9fbfb36e00e1c6be44d5ed8b2be322667f8ad4955387375c0cf617c542e01a56"
 dependencies = [
  "crc",
  "pest",
