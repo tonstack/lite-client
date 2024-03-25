@@ -1,7 +1,7 @@
 use adnl::{AdnlBuilder, AdnlPeer, AdnlPrivateKey, AdnlPublicKey};
 use tokio::{io::{AsyncReadExt, AsyncWriteExt}, net::ToSocketAddrs};
 
-use crate::{tl::{adnl::Message, common::Int256, request::{Query, WrappedRequest}, response::Response}, types::LiteError};
+use crate::{tl::{adnl::Message, common::Int256, request::{LiteQuery, WrappedRequest}, response::Response}, types::LiteError};
 
 pub struct SingleClient<T: AsyncReadExt + AsyncWriteExt> {
     peer: AdnlPeer<T>
@@ -23,7 +23,7 @@ impl<T: AsyncReadExt + AsyncWriteExt + Unpin> SingleClient<T> {
 
     pub async fn query(&mut self, request: WrappedRequest) -> Result<Response, LiteError> {
         let query_id = Int256::random();
-        let query = Message::Query { query_id: query_id.clone(), query: Query { wrapped_request: request } };
+        let query = Message::Query { query_id: query_id.clone(), query: LiteQuery { wrapped_request: request } };
         self.peer.send(&mut tl_proto::serialize(query)).await.map_err(|e| LiteError::AdnlError(e))?;
         let mut answer = Vec::with_capacity(8192);
         self.peer.receive(&mut answer).await.map_err(|e| LiteError::AdnlError(e))?;

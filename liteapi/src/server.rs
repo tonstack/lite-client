@@ -21,43 +21,6 @@ impl<T: AsyncReadExt + AsyncWriteExt + Unpin> Connection<T> {
     }
 }
 
-async fn handle_request<LS: LiteService, T: AsyncReadExt + AsyncWriteExt + Unpin>(service: &mut LS, peer: &mut AdnlPeer<T>) -> Result<(), Box<dyn Error>> {
-    let mut buffer = Vec::with_capacity(8192);
-    let size = peer.receive(&mut buffer).await?;
-    let message = tl_proto::deserialize::<Message>(&buffer[..size])?;
-    if let Message::Query { query_id, query } = message {
-        let response = service.ready().await?.call(query.wrapped_request).await?;
-        let answer = Message::Answer { query_id, answer: response };
-        peer.send(&mut tl_proto::serialize(answer)).await?;
-        Ok(())
-    }
-    else {
-        Err(LiteError::UnexpectedMessage.into())
-    }
-}
-
-pub async fn serve<M, S>(listener: TcpListener, make_service: M, private_key: &S) -> Result<(), Box<dyn Error>> where M: MakeService<SocketAddr, WrappedRequest>, M::Service: LiteService, S: AdnlPrivateKey {
-    loop {
-        let (socket, remote_addr) = match tcp_accept(&listener).await {
-            Some(x) => x,
-            None => continue,
-        };
-        poll_fn(|cx| make_service.poll_ready(cx)).await?;
-
-        let service = match make_service.make_service(remote_addr).await {
-            Ok(service) => service,
-            Err(_) => continue,
-        };
-
-        tokio::spawn(async move {
-            let mut peer = AdnlPeer::handle_handshake(socket, private_key).await?;
-            loop {
-                handle_request(&mut service, &mut peer).await;
-            }
-        });
-    }
-}
-
 fn is_connection_error(e: &io::Error) -> bool {
     matches!(
         e.kind(),
