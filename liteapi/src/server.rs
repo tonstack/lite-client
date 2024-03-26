@@ -15,7 +15,6 @@ use tower::Service;
 
 use crate::peer::LitePeer;
 use crate::tl::adnl::Message;
-use crate::types::LiteError;
 
 pub async fn serve<A, S, M>(addr: &A, private_key: S, mut service_maker: M) -> Result<(), Box<dyn std::error::Error>> 
     where A: ToSocketAddrs, 
@@ -51,7 +50,7 @@ pub async fn serve<A, S, M>(addr: &A, private_key: S, mut service_maker: M) -> R
         let service = service_maker.make_service(addr).await.expect("making service failed");
         let private_key = private_key.clone();
         tokio::spawn(async move {
-            let adnl = AdnlPeer::handle_handshake(socket, &private_key).await.expect("handshake failed");
+            let adnl = AdnlPeer::handle_handshake(socket, |_| Some(private_key.clone())).await.expect("handshake failed");
             let lite = LitePeer::new(adnl);
             Server::new(lite, service).await.expect("server failed");
         });

@@ -24,20 +24,21 @@ impl<T> Sink<Message> for LitePeer<T> where T: Sink<Bytes, Error = AdnlError> {
     type Error = LiteError;
     
     fn poll_ready(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), Self::Error>> {
-        self.project().inner.poll_ready(cx).map_err(|e| LiteError::TransportError(e))
+        self.project().inner.poll_ready(cx).map_err(|e| LiteError::AdnlError(e.into()))
     }
     
     fn start_send(self: std::pin::Pin<&mut Self>, item: Message) -> Result<(), Self::Error> {
+        log::debug!("Sending TL message: {:?}", item);
         let data = tl_proto::serialize(item).into();
-        self.project().inner.start_send(data).map_err(|e| LiteError::TransportError(e.into()))
+        self.project().inner.start_send(data).map_err(|e| LiteError::AdnlError(e.into()))
     }
     
     fn poll_flush(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), Self::Error>> {
-        self.project().inner.poll_flush(cx).map_err(|e| LiteError::TransportError(e))
+        self.project().inner.poll_flush(cx).map_err(|e| LiteError::AdnlError(e.into()))
     }
     
     fn poll_close(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Result<(), Self::Error>> {
-        self.project().inner.poll_close(cx).map_err(|e| LiteError::TransportError(e))
+        self.project().inner.poll_close(cx).map_err(|e| LiteError::AdnlError(e.into()))
     }
 }
 
@@ -49,9 +50,10 @@ impl<T> Stream for LitePeer<T> where T: Stream<Item = Result<Bytes, AdnlError>> 
         match inner {
             Poll::Ready(Some(Ok(bytes))) => {
                 let decoded = tl_proto::deserialize(&bytes);
+                log::debug!("Received TL message: {:?}", decoded);
                 Poll::Ready(Some(decoded.map_err(|e| LiteError::TlError(e))))
             },
-            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(LiteError::TransportError(e)))),
+            Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(LiteError::AdnlError(e.into())))),
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Pending => Poll::Pending,
         }

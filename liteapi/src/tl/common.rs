@@ -26,6 +26,12 @@ impl fmt::Display for String {
     }
 }
 
+impl From<&str> for String {
+    fn from(s: &str) -> Self {
+        Self(s.as_bytes().to_vec())
+    }
+}
+
 impl String {
     pub fn new(str: std::string::String) -> Self {
         Self(str.into_bytes())

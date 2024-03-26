@@ -13,8 +13,10 @@ pub enum LiteError {
     TlError(TlError),
     #[error("Unexpected TL message")]
     UnexpectedMessage,
-    #[error("Transport error")]
-    TransportError(AdnlError),
+    #[error("ADNL error")]
+    AdnlError(#[from] AdnlError),
+    #[error("Unknown error")]
+    UnknownError(#[from] Box<dyn std::error::Error + Send + Sync + 'static>)
 }
 
 pub trait LiteService {}

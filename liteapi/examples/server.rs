@@ -2,12 +2,13 @@ use std::env;
 use std::error::Error;
 
 use adnl::{AdnlPrivateKey, AdnlPublicKey};
+use ton_liteapi::layers::WrapErrorLayer;
 use ton_liteapi::server::serve;
 use ton_liteapi::types::LiteError;
 use ton_liteapi::tl::response::CurrentTime;
 use ton_liteapi::tl::adnl::Message;
 use ton_liteapi::tl::response::Response;
-use tower::{buffer::Buffer, make::Shared, service_fn};
+use tower::{make::Shared, ServiceBuilder};
 use x25519_dalek::StaticSecret;
 
 async fn handler(req: Message) -> Result<Message, LiteError> {
@@ -32,8 +33,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     println!("Public key is: {}", hex::encode(private_key.public().edwards_repr()));
     println!("Address is: {}", hex::encode(private_key.public().address().as_bytes()));
 
-    let buffer = Buffer::new(service_fn(handler), 100);
+    let service = ServiceBuilder::new()
+       .buffer(100)
+       .layer(WrapErrorLayer)
+       .service_fn(handler);
 
-    serve(&("127.0.0.1", 8080), private_key, Shared::new(buffer)).await?;
+    serve(&("127.0.0.1", 8080), private_key, Shared::new(service)).await?;
     Ok(())
 }
