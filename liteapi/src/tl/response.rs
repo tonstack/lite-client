@@ -7,197 +7,197 @@ use super::utils::*;
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct MasterchainInfo {
-    last: BlockIdExt,
-    state_root_hash: Int256,
-    init: ZeroStateIdExt,
+    pub last: BlockIdExt,
+    pub state_root_hash: Int256,
+    pub init: ZeroStateIdExt,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct MasterchainInfoExt {
     #[tl(flags)]
-    mode: (),
-    version: i32,
-    capabilities: i64,
-    last: BlockIdExt,
-    last_utime: i32,
-    now: i32,
-    state_root_hash: Int256,
-    init: ZeroStateIdExt,
+    pub mode: (),
+    pub version: i32,
+    pub capabilities: i64,
+    pub last: BlockIdExt,
+    pub last_utime: i32,
+    pub now: i32,
+    pub state_root_hash: Int256,
+    pub init: ZeroStateIdExt,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct CurrentTime {
-    now: i32,
+    pub now: i32,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Version {
-    mode: i32,
-    version: i32,
-    capabilities: i64,
-    now: i32,
+    pub mode: i32,
+    pub version: i32,
+    pub capabilities: i64,
+    pub now: i32,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockData {
-    id: BlockIdExt,
-    data: Vec<u8>,
+    pub id: BlockIdExt,
+    pub data: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockState {
-    id: BlockIdExt,
-    root_hash: Int256,
-    file_hash: Int256,
-    data: Vec<u8>,
+    pub id: BlockIdExt,
+    pub root_hash: Int256,
+    pub file_hash: Int256,
+    pub data: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockHeader {
-    id: BlockIdExt,
-    mode: i32,
-    header_proof: Vec<u8>,
+    pub id: BlockIdExt,
+    pub mode: i32,
+    pub header_proof: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct SendMsgStatus {
-    status: i32,
+    pub status: i32,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct AccountState {
-    id: BlockIdExt,
-    shardblk: BlockIdExt,
+    pub id: BlockIdExt,
+    pub shardblk: BlockIdExt,
     #[derivative(Debug(format_with = "fmt_bytes"))]
-    shard_proof: Vec<u8>,
+    pub shard_proof: Vec<u8>,
     #[derivative(Debug(format_with = "fmt_bytes"))]
-    proof: Vec<u8>,
+    pub proof: Vec<u8>,
     #[derivative(Debug(format_with = "fmt_bytes"))]
-    state: Vec<u8>,
+    pub state: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct RunMethodResult {
     #[tl(flags)]
-    mode: (),
-    id: BlockIdExt,
-    shardblk: BlockIdExt,
+    pub mode: (),
+    pub id: BlockIdExt,
+    pub shardblk: BlockIdExt,
     #[tl(flags_bit = "mode.0")]
-    shard_proof: Option<Vec<u8>>,
+    pub shard_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.0")]
-    proof: Option<Vec<u8>>,
+    pub proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.1")]
-    state_proof: Option<Vec<u8>>,
+    pub state_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.3")]
-    init_c7: Option<Vec<u8>>,
+    pub init_c7: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.4")]
-    lib_extras: Option<Vec<u8>>,
-    exit_code: i32,
+    pub lib_extras: Option<Vec<u8>>,
+    pub exit_code: i32,
     #[tl(flags_bit = "mode.2")]
-    result: Option<Vec<u8>>,
+    pub result: Option<Vec<u8>>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct ShardInfo {
-    id: BlockIdExt,
-    shardblk: BlockIdExt,
-    shard_proof: Vec<u8>,
-    shard_descr: Vec<u8>,
+    pub id: BlockIdExt,
+    pub shardblk: BlockIdExt,
+    pub shard_proof: Vec<u8>,
+    pub shard_descr: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct AllShardsInfo {
-    id: BlockIdExt,
-    proof: Vec<u8>,
-    data: Vec<u8>,
+    pub id: BlockIdExt,
+    pub proof: Vec<u8>,
+    pub data: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionInfo {
-    id: BlockIdExt,
-    proof: Vec<u8>,
-    transaction: Vec<u8>,
+    pub id: BlockIdExt,
+    pub proof: Vec<u8>,
+    pub transaction: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionList {
-    ids: Vec<BlockIdExt>,
-    transactions: Vec<u8>,
+    pub ids: Vec<BlockIdExt>,
+    pub transactions: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionId {
     #[tl(flags)]
-    mode: (),
+    pub mode: (),
     #[tl(flags_bit = "mode.0")]
-    account: Option<Int256>,
+    pub account: Option<Int256>,
     #[tl(flags_bit = "mode.1")]
-    lt: Option<i64>,
+    pub lt: Option<i64>,
     #[tl(flags_bit = "mode.2")]
-    hash: Option<Int256>,
+    pub hash: Option<Int256>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockTransactions {
-    id: BlockIdExt,
-    req_count: i32,
-    incomplete: bool,
-    ids: Vec<TransactionId>,
-    proof: Vec<u8>,
+    pub id: BlockIdExt,
+    pub req_count: i32,
+    pub incomplete: bool,
+    pub ids: Vec<TransactionId>,
+    pub proof: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct PartialBlockProof {
-    complete: bool,
-    from: BlockIdExt,
-    to: BlockIdExt,
-    steps: Vec<BlockLink>,
+    pub complete: bool,
+    pub from: BlockIdExt,
+    pub to: BlockIdExt,
+    pub steps: Vec<BlockLink>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct ConfigInfo {
     #[tl(flags)]
-    mode: (),
-    id: BlockIdExt,
-    state_proof: Vec<u8>,
-    config_proof: Vec<u8>,
+    pub mode: (),
+    pub id: BlockIdExt,
+    pub state_proof: Vec<u8>,
+    pub config_proof: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct ValidatorStats {
     #[tl(flags)]
-    mode: (),
-    id: BlockIdExt,
-    count: i32,
-    complete: bool,
-    state_proof: Vec<u8>,
-    data_proof: Vec<u8>,
+    pub mode: (),
+    pub id: BlockIdExt,
+    pub count: i32,
+    pub complete: bool,
+    pub state_proof: Vec<u8>,
+    pub data_proof: Vec<u8>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Error {
-    code: i32,
+    pub code: i32,
     #[derivative(Debug(format_with = "String::fmt"))]
-    message: String,
+    pub message: String,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]

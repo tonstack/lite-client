@@ -1,9 +1,13 @@
-use std::{env, error::Error};
+use std::env; 
+use std::error::Error;
 
-use adnl::{AdnlPeer, AdnlPrivateKey, AdnlPublicKey};
-use tokio::net::TcpListener;
-use tokio_tower::pipeline::Server;
-use ton_liteapi::{peer::LitePeer, tl::{adnl::Message, response}, types::LiteError};
+use adnl::{AdnlPrivateKey, AdnlPublicKey};
+use ton_liteapi::server::serve;
+use ton_liteapi::types::LiteError;
+use ton_liteapi::tl::response::CurrentTime;
+use ton_liteapi::tl::adnl::Message;
+use ton_liteapi::tl::response::Response;
+use tower::{buffer::Buffer, make::Shared, service_fn};
 use x25519_dalek::StaticSecret;
 
 async fn handler(req: Message) -> Result<Message, LiteError> {
@@ -13,7 +17,7 @@ async fn handler(req: Message) -> Result<Message, LiteError> {
     };
     println!("Received frame: {:?}, tag = {}", &req, query_id);
 
-    let response = Message::Answer { query_id, answer: response::Response::CurrentTime { now: 1234 } };
+    let response = Message::Answer { query_id, answer: Response::CurrentTime(CurrentTime { now: 1234 }) };
     Ok(response)
 }
 
@@ -24,21 +28,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let private_key_bytes: [u8; 32] = hex::decode(private_key_hex)?.try_into().unwrap();
     let private_key = StaticSecret::from(private_key_bytes);
 
-    let listener = TcpListener::bind(&"127.0.0.1:8080").await?;
-
     // ADNL: print public key and adnl address associated with given private key
     println!("Public key is: {}", hex::encode(private_key.public().edwards_repr()));
     println!("Address is: {}", hex::encode(private_key.public().address().as_bytes()));
 
-    loop {
-        let (socket, _) = listener.accept().await?;
-        let private_key = private_key.clone();
-        tokio::spawn(async move {
-            // ADNL: handle handshake
-            let adnl = AdnlPeer::handle_handshake(socket, &private_key).await.expect("handshake failed");
-            // liteapi: wrap raw bytes into lite messages and spawn handler for them
-            let lite = LitePeer::new(adnl);
-            Server::new(lite, tower::service_fn(handler)).await.expect("server failed");
-        });
-    }
+    let buffer = Buffer::new(service_fn(handler), 100);
+
+    serve(&("127.0.0.1", 8080), private_key, Shared::new(buffer)).await?;
+    Ok(())
 }

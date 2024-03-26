@@ -7,8 +7,8 @@ use crate::tl::{request::WrappedRequest, response::Response};
 
 #[derive(Debug, Error)]
 pub enum LiteError {
-    #[error("Liteserver error with code {code}: {message}")]
-    ServerError { code: i32, message: String },
+    #[error("Liteserver error")]
+    ServerError(crate::tl::response::Error),
     #[error("TL parsing error")]
     TlError(TlError),
     #[error("Unexpected TL message")]
@@ -17,4 +17,6 @@ pub enum LiteError {
     TransportError(AdnlError),
 }
 
-pub trait LiteService: Service<WrappedRequest, Response = Response, Error = LiteError>{}
+pub trait LiteService {}
+
+impl<T> LiteService for T where T: Service<WrappedRequest, Response = Response, Error = LiteError> {}
