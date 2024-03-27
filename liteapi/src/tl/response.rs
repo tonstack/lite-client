@@ -61,7 +61,18 @@ pub struct BlockState {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockHeader {
     pub id: BlockIdExt,
-    pub mode: i32,
+    #[tl(flags)]
+    pub mode: (),
+    #[tl(flags_bit = "mode.0")]
+    pub with_state_update: Option<()>,
+    #[tl(flags_bit = "mode.1")]
+    pub with_value_flow: Option<()>,
+    #[tl(flags_bit = "mode.4")]
+    pub with_extra: Option<()>,
+    #[tl(flags_bit = "mode.5")]
+    pub with_shard_hashes: Option<()>,
+    #[tl(flags_bit = "mode.6")]
+    pub with_prev_blk_signatures: Option<()>,
     pub header_proof: Vec<u8>,
 }
 
