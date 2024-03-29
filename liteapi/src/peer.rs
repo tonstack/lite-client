@@ -50,7 +50,7 @@ impl<T> Stream for LitePeer<T> where T: Stream<Item = Result<Bytes, AdnlError>> 
         match inner {
             Poll::Ready(Some(Ok(bytes))) => {
                 let decoded = tl_proto::deserialize(&bytes);
-                log::debug!("Received TL message: {:?}", decoded);
+                log::debug!("Decoded to TL message:\n{:?}\n{:?}", bytes, decoded);
                 Poll::Ready(Some(decoded.map_err(|e| LiteError::TlError(e))))
             },
             Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(LiteError::AdnlError(e.into())))),
