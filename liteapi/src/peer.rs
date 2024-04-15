@@ -3,6 +3,7 @@ use std::task::Poll;
 use adnl::AdnlError;
 use futures::{Sink, Stream};
 use pin_project::pin_project;
+use rand::random;
 use tokio_tower::multiplex::TagStore;
 use tokio_util::bytes::Bytes;
 
@@ -60,20 +61,30 @@ impl<T> Stream for LitePeer<T> where T: Stream<Item = Result<Bytes, AdnlError>> 
     }
 }
 
+#[derive(PartialEq, Eq)]
+pub enum LiteTag {
+    Int256(Int256),
+    Long(u64),
+}
+
 impl<T> TagStore<Message, Message> for LitePeer<T> {
-    type Tag = Int256;
+    type Tag = LiteTag;
 
     fn assign_tag(self: std::pin::Pin<&mut Self>, r: &mut Message) -> Self::Tag {
         match r {
-            Message::Answer { query_id, .. } => { *query_id = Int256::random(); query_id.clone() },
-            Message::Query { query_id, .. } => { *query_id = Int256::random(); query_id.clone() },
+            Message::Answer { query_id, .. } => { *query_id = Int256::random(); LiteTag::Int256(query_id.clone()) },
+            Message::Query { query_id, .. } => { *query_id = Int256::random(); LiteTag::Int256(query_id.clone()) },
+            Message::Ping { random_id } => { *random_id = random(); LiteTag::Long(random_id.clone()) },
+            Message::Pong { random_id } => { *random_id = random(); LiteTag::Long(random_id.clone()) },
         }
     }
 
     fn finish_tag(self: std::pin::Pin<&mut Self>, r: &Message) -> Self::Tag {
         match r {
-            Message::Answer { query_id, .. } => query_id.clone(),
-            Message::Query { query_id, .. } => query_id.clone(),
+            Message::Answer { query_id, .. } => LiteTag::Int256(query_id.clone()),
+            Message::Query { query_id, .. } => LiteTag::Int256(query_id.clone()),
+            Message::Ping { random_id } => LiteTag::Long(random_id.clone()),
+            Message::Pong { random_id } => LiteTag::Long(random_id.clone()),
         }
     }
 }

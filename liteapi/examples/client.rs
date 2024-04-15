@@ -2,7 +2,7 @@ use adnl::{AdnlPeer, AdnlRawPublicKey};
 use tokio_tower::multiplex;
 use ton_liteapi::layers::WrapMessagesLayer;
 use ton_liteapi::peer::LitePeer;
-use ton_liteapi::tl::request::{LiteQuery, Request, WrappedRequest};
+use ton_liteapi::tl::request::{Request, WrappedRequest};
 use tower::{Service, ServiceBuilder, ServiceExt};
 
 #[tokio::main]

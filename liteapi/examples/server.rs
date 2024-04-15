@@ -2,24 +2,22 @@ use std::env;
 use std::error::Error;
 
 use adnl::{AdnlPrivateKey, AdnlPublicKey};
-use ton_liteapi::layers::WrapErrorLayer;
+use ton_liteapi::layers::{UnwrapMessagesLayer, WrapErrorLayer};
 use ton_liteapi::server::serve;
+use ton_liteapi::tl::request::{Request, WrappedRequest};
 use ton_liteapi::types::LiteError;
 use ton_liteapi::tl::response::CurrentTime;
-use ton_liteapi::tl::adnl::Message;
 use ton_liteapi::tl::response::Response;
 use tower::{make::Shared, ServiceBuilder};
 use x25519_dalek::StaticSecret;
 
-async fn handler(req: Message) -> Result<Message, LiteError> {
-    let (query_id, req) = match req {
-        Message::Query { query_id, query } => (query_id, query),
-        _ => return Err(LiteError::UnexpectedMessage)
-    };
-    println!("Received frame: {:?}, tag = {}", &req, query_id);
-
-    let response = Message::Answer { query_id, answer: Response::CurrentTime(CurrentTime { now: 1234 }) };
-    Ok(response)
+async fn handler(req: WrappedRequest) -> Result<Response, LiteError> {
+    println!("Received frame: {:?}", &req);
+    if let Request::GetTime = req.request {
+        Ok(Response::CurrentTime(CurrentTime { now: 1234 }))
+    } else {
+        Err(LiteError::UnexpectedMessage)
+    }
 }
 
 #[tokio::main]
@@ -35,6 +33,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let service = ServiceBuilder::new()
        .buffer(100)
+       .layer(UnwrapMessagesLayer)
        .layer(WrapErrorLayer)
        .service_fn(handler);
 
