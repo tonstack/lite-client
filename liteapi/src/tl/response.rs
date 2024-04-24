@@ -17,11 +17,11 @@ pub struct MasterchainInfo {
 pub struct MasterchainInfoExt {
     #[tl(flags)]
     pub mode: (),
-    pub version: i32,
-    pub capabilities: i64,
+    pub version: u32,
+    pub capabilities: u64,
     pub last: BlockIdExt,
-    pub last_utime: i32,
-    pub now: i32,
+    pub last_utime: u32,
+    pub now: u32,
     pub state_root_hash: Int256,
     pub init: ZeroStateIdExt,
 }
@@ -29,16 +29,16 @@ pub struct MasterchainInfoExt {
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct CurrentTime {
-    pub now: i32,
+    pub now: u32,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct Version {
-    pub mode: i32,
-    pub version: i32,
-    pub capabilities: i64,
-    pub now: i32,
+    pub mode: u32,
+    pub version: u32,
+    pub capabilities: u64,
+    pub now: u32,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -79,7 +79,7 @@ pub struct BlockHeader {
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct SendMsgStatus {
-    pub status: i32,
+    pub status: u32,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -157,7 +157,7 @@ pub struct TransactionId {
     #[tl(flags_bit = "mode.0")]
     pub account: Option<Int256>,
     #[tl(flags_bit = "mode.1")]
-    pub lt: Option<i64>,
+    pub lt: Option<u64>,
     #[tl(flags_bit = "mode.2")]
     pub hash: Option<Int256>,
 }
@@ -166,7 +166,7 @@ pub struct TransactionId {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockTransactions {
     pub id: BlockIdExt,
-    pub req_count: i32,
+    pub req_count: u32,
     pub incomplete: bool,
     pub ids: Vec<TransactionId>,
     pub proof: Vec<u8>,
@@ -197,7 +197,7 @@ pub struct ValidatorStats {
     #[tl(flags)]
     pub mode: (),
     pub id: BlockIdExt,
-    pub count: i32,
+    pub count: u32,
     pub complete: bool,
     pub state_proof: Vec<u8>,
     pub data_proof: Vec<u8>,

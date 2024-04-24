@@ -110,7 +110,7 @@ pub struct AccountId {
 // #[tl(boxed, id = "liteServer.transactionId3", scheme_inline = r##"liteServer.transactionId3 account:int256 lt:long = liteServer.TransactionId3;"##)]
 pub struct TransactionId3 {
     pub account: Int256,
-    pub lt: i64,
+    pub lt: u64,
 }
 
 /// liteServer.signature node_id_short:int256 signature:bytes = liteServer.Signature;
@@ -131,8 +131,8 @@ pub struct Signature {
     scheme_inline = r##"liteServer.signatureSet validator_set_hash:int catchain_seqno:int signatures:(vector liteServer.signature) = liteServer.SignatureSet;"##
 )]
 pub struct SignatureSet {
-    pub validator_set_hash: i32,
-    pub catchain_seqno: i32,
+    pub validator_set_hash: u32,
+    pub catchain_seqno: u32,
     pub signatures: Vec<Signature>,
 }
 
@@ -186,7 +186,7 @@ pub struct TransactionId {
     #[tl(flags_bit = "mode.0")]
     pub account: Option<Int256>,
     #[tl(flags_bit = "mode.1")]
-    pub lt: Option<i64>,
+    pub lt: Option<u64>,
     #[tl(flags_bit = "mode.2")]
     pub hash: Option<Int256>,
 }
