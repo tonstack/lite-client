@@ -34,8 +34,8 @@ pub struct WrappedRequest {
     scheme_inline = r##"liteServer.waitMasterchainSeqno seqno:int timeout_ms:int = Object;"##
 )]
 pub struct WaitMasterchainSeqno {
-    pub seqno: i32,
-    pub timeout_ms: i32,
+    pub seqno: u32,
+    pub timeout_ms: u32,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -93,7 +93,7 @@ pub struct RunSmcMethod {
     pub mode: u32,
     pub id: BlockIdExt,
     pub account: AccountId,
-    pub method_id: i64,
+    pub method_id: u64,
     pub params: Vec<u8>,
 }
 
@@ -117,15 +117,15 @@ pub struct GetAllShardsInfo {
 pub struct GetOneTransaction {
     pub id: BlockIdExt,
     pub account: AccountId,
-    pub lt: i64,
+    pub lt: u64,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct GetTransactions {
-    pub count: i32,
+    pub count: u32,
     pub account: AccountId,
-    pub lt: i64,
+    pub lt: u64,
     pub hash: Int256,
 }
 
@@ -136,9 +136,9 @@ pub struct LookupBlock {
     pub mode: (),
     pub id: BlockId,
     #[tl(flags_bit = "mode.1")]
-    pub lt: Option<i64>,
+    pub lt: Option<u64>,
     #[tl(flags_bit = "mode.2")]
-    pub utime: Option<i32>,
+    pub utime: Option<u32>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -147,7 +147,7 @@ pub struct ListBlockTransactions {
     pub id: BlockIdExt,
     #[tl(flags)]
     pub mode: (),
-    pub count: i32,
+    pub count: u32,
     #[tl(flags_bit = "mode.7")]
     pub after: Option<TransactionId3>,
     #[tl(flags_bit = "mode.6")]
@@ -187,11 +187,11 @@ pub struct GetValidatorStats {
     #[tl(flags)]
     pub mode: (),
     id: BlockIdExt,
-    pub limit: i32,
+    pub limit: u32,
     #[tl(flags_bit = "mode.0")]
     pub start_after: Option<Int256>,
     #[tl(flags_bit = "mode.2")]
-    pub modified_after: Option<i32>,
+    pub modified_after: Option<u32>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
