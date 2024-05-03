@@ -81,7 +81,7 @@ pub struct BlockId {
 
 /// tonNode.blockIdExt workchain:int shard:long seqno:int root_hash:int256 file_hash:int256 = tonNode.BlockIdExt;
 #[derive(TlRead, TlWrite, Derivative)]
-#[derivative(Debug, Clone, PartialEq)]
+#[derivative(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct BlockIdExt {
     pub workchain: i32,
     pub shard: u64,
