@@ -135,6 +135,8 @@ pub struct LookupBlock {
     #[tl(flags)]
     pub mode: (),
     pub id: BlockId,
+    #[tl(flags_bit = "mode.0")]
+    pub seqno: Option<()>,
     #[tl(flags_bit = "mode.1")]
     pub lt: Option<u64>,
     #[tl(flags_bit = "mode.2")]
