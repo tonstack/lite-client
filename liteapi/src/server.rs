@@ -6,7 +6,6 @@ use std::time::Duration;
 
 use adnl::AdnlPeer;
 use adnl::AdnlPrivateKey;
-use log::error;
 use tokio::net::TcpListener;
 use tokio::net::ToSocketAddrs;
 use tokio_tower::multiplex::Server;
@@ -40,17 +39,19 @@ pub async fn serve<A, S, M>(addr: &A, private_key: S, mut service_maker: M) -> R
                 // > will be logged at the `error` level, since it is still a big deal,
                 // > and then the listener will sleep for 1 second.
                 if !matches!(e.kind(), ErrorKind::ConnectionRefused | ErrorKind::ConnectionAborted | ErrorKind::ConnectionReset) {
-                    error!("accept error: {e}");
+                    log::error!("accept error: {e}");
                     tokio::time::sleep(Duration::from_secs(1)).await;
                 }
                 continue;
             }
         };
+        log::debug!("[{addr:?}] Accepted socket");
         poll_fn(|cx| service_maker.poll_ready(cx)).await.expect("polling service maker failed");
         let service = service_maker.make_service(addr).await.expect("making service failed");
         let private_key = private_key.clone();
         tokio::spawn(async move {
             let adnl = AdnlPeer::handle_handshake(socket, |_| Some(private_key.clone())).await.expect("handshake failed");
+            log::debug!("[{addr:?}] Handshake performed");
             let lite = LitePeer::new(adnl);
             Server::new(lite, service).await.expect("server failed");
         });
