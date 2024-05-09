@@ -141,6 +141,16 @@ pub struct LookupBlock {
     pub lt: Option<u64>,
     #[tl(flags_bit = "mode.2")]
     pub utime: Option<u32>,
+    #[tl(flags_bit = "mode.4")]
+    pub with_state_update: Option<()>,
+    #[tl(flags_bit = "mode.5")]
+    pub with_value_flow: Option<()>,
+    #[tl(flags_bit = "mode.8")]
+    pub with_extra: Option<()>,
+    #[tl(flags_bit = "mode.9")]
+    pub with_shard_hashes: Option<()>,
+    #[tl(flags_bit = "mode.10")]
+    pub with_prev_blk_signatures: Option<()>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
