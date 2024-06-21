@@ -189,6 +189,20 @@ pub struct ConfigInfo {
     pub id: BlockIdExt,
     pub state_proof: Vec<u8>,
     pub config_proof: Vec<u8>,
+    #[tl(flags_bit = "mode.0")]
+    pub with_state_root: Option<()>,
+    #[tl(flags_bit = "mode.1")]
+    pub with_libraries: Option<()>,
+    #[tl(flags_bit = "mode.2")]
+    pub with_state_extra_root: Option<()>,
+    #[tl(flags_bit = "mode.3")]
+    pub with_shard_hashes: Option<()>,
+    #[tl(flags_bit = "mode.6")]
+    pub with_accounts_root: Option<()>,
+    #[tl(flags_bit = "mode.7")]
+    pub with_prev_blocks: Option<()>,
+    #[tl(flags_bit = "mode.15")]
+    pub extract_from_key_block: Option<()>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]

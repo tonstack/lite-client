@@ -169,16 +169,46 @@ pub struct GetBlockProof {
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct GetConfigAll {
-    pub mode: i32,
+    #[tl(flags)]
+    pub mode: (),
     pub id: BlockIdExt,
+    #[tl(flags_bit = "mode.0")]
+    pub with_state_root: Option<()>,
+    #[tl(flags_bit = "mode.1")]
+    pub with_libraries: Option<()>,
+    #[tl(flags_bit = "mode.2")]
+    pub with_state_extra_root: Option<()>,
+    #[tl(flags_bit = "mode.3")]
+    pub with_shard_hashes: Option<()>,
+    #[tl(flags_bit = "mode.6")]
+    pub with_accounts_root: Option<()>,
+    #[tl(flags_bit = "mode.7")]
+    pub with_prev_blocks: Option<()>,
+    #[tl(flags_bit = "mode.15")]
+    pub extract_from_key_block: Option<()>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
 pub struct GetConfigParams {
-    pub mode: i32,
+    #[tl(flags)]
+    pub mode: (),
     pub id: BlockIdExt,
     pub param_list: Vec<i32>,
+    #[tl(flags_bit = "mode.0")]
+    pub with_state_root: Option<()>,
+    #[tl(flags_bit = "mode.1")]
+    pub with_libraries: Option<()>,
+    #[tl(flags_bit = "mode.2")]
+    pub with_state_extra_root: Option<()>,
+    #[tl(flags_bit = "mode.3")]
+    pub with_shard_hashes: Option<()>,
+    #[tl(flags_bit = "mode.6")]
+    pub with_accounts_root: Option<()>,
+    #[tl(flags_bit = "mode.7")]
+    pub with_prev_blocks: Option<()>,
+    #[tl(flags_bit = "mode.15")]
+    pub extract_from_key_block: Option<()>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
