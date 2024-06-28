@@ -197,10 +197,18 @@ pub struct ConfigInfo {
     pub with_state_extra_root: Option<()>,
     #[tl(flags_bit = "mode.3")]
     pub with_shard_hashes: Option<()>,
+    #[tl(flags_bit = "mode.4")]
+    pub with_validator_set: Option<()>,
+    #[tl(flags_bit = "mode.5")]
+    pub with_special_smc: Option<()>,
     #[tl(flags_bit = "mode.6")]
     pub with_accounts_root: Option<()>,
     #[tl(flags_bit = "mode.7")]
     pub with_prev_blocks: Option<()>,
+    #[tl(flags_bit = "mode.8")]
+    pub with_workchain_info: Option<()>,
+    #[tl(flags_bit = "mode.9")]
+    pub with_capabilities: Option<()>,
     #[tl(flags_bit = "mode.15")]
     pub extract_from_key_block: Option<()>,
 }
