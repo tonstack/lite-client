@@ -176,6 +176,10 @@ pub struct GetBlockProof {
     pub known_block: BlockIdExt,
     #[tl(flags_bit = "mode.0")]
     pub target_block: Option<BlockIdExt>,
+    #[tl(flags_bit = "mode.1")]
+    pub allow_weak_target: Option<()>,
+    #[tl(flags_bit = "mode.12")]
+    pub base_block_from_request: Option<()>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
