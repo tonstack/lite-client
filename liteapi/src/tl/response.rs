@@ -227,6 +227,12 @@ pub struct ValidatorStats {
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
+pub struct LibraryResult {
+    pub result: Vec<LibraryEntry>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
 pub struct Error {
     pub code: i32,
     #[derivative(Debug(format_with = "String::fmt"))]
@@ -312,6 +318,10 @@ pub enum Response {
     /// liteServer.validatorStats mode:# id:tonNode.blockIdExt count:int complete:Bool state_proof:bytes data_proof:bytes = liteServer.ValidatorStats;
     #[tl(id = 0xb9f796d8)]
     ValidatorStats(ValidatorStats),
+
+    /// liteServer.libraryResult result:(vector liteServer.libraryEntry) = liteServer.LibraryResult;
+    #[tl(id = 0x117ab96b)]
+    LibraryResult(LibraryResult),
 
     /// liteServer.error code:int message:string = liteServer.Error;
     #[tl(id = 0xbba9e148)]

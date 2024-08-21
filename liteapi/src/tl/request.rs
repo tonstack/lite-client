@@ -258,6 +258,12 @@ pub struct GetValidatorStats {
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
+pub struct GetLibraries {
+    pub library_list: Vec<Int256>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed)]
 pub enum Request {
     /// liteServer.getMasterchainInfo = liteServer.MasterchainInfo;
@@ -339,4 +345,8 @@ pub enum Request {
     /// liteServer.getValidatorStats#091a58bc mode:# id:tonNode.blockIdExt limit:int start_after:mode.0?int256 modified_after:mode.2?int = liteServer.ValidatorStats;
     #[tl(id = 0xe7253699)]
     GetValidatorStats(GetValidatorStats),
+
+    /// liteServer.getLibraries library_list:(vector int256) = liteServer.LibraryResult;
+    #[tl(id = 0xd122b662)]
+    GetLibraries(GetLibraries),
 }

@@ -190,3 +190,11 @@ pub struct TransactionId {
     #[tl(flags_bit = "mode.2")]
     pub hash: Option<Int256>,
 }
+
+/// liteServer.libraryEntry hash:int256 data:bytes = liteServer.LibraryEntry;
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct LibraryEntry {
+    pub hash: Int256,
+    pub data: Vec<u8>,
+}
