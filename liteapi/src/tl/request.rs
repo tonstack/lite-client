@@ -264,6 +264,15 @@ pub struct GetLibraries {
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
+pub struct GetLibrariesWithProof {
+    pub id: BlockIdExt,
+    #[tl(flags)]
+    pub mode: (),
+    pub library_list: Vec<Int256>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed)]
 pub enum Request {
     /// liteServer.getMasterchainInfo = liteServer.MasterchainInfo;
@@ -349,4 +358,8 @@ pub enum Request {
     /// liteServer.getLibraries library_list:(vector int256) = liteServer.LibraryResult;
     #[tl(id = 0xd122b662)]
     GetLibraries(GetLibraries),
+
+    /// liteServer.getLibrariesWithProof id:tonNode.blockIdExt mode:# library_list:(vector int256) = liteServer.LibraryResultWithProof;
+    #[tl(id = 0xd97693bd)]
+    GetLibrariesWithProof(GetLibrariesWithProof),
 }
