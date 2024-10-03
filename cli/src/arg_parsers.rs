@@ -46,11 +46,15 @@ fn parse_account_base64(s: &str) -> std::result::Result<AccountId, Box<dyn Error
 
 fn parse_account_raw(s: &str) -> std::result::Result<AccountId, Box<dyn Error>> {
     let (workchain, account) = s.split_once(":").ok_or_else(|| format!("can't parse {}: wrong address format, must be <workchain>:<account>", s))?;
-    let workchain = workchain.parse::<i32>().map_err(|e| format!("wrong workchain {}", workchain))?;
-    let id = account.parse::<Int256>().map_err(|e| format!("wrong account id {}", account))?;
+    let workchain = workchain.parse::<i32>().map_err(|_e| format!("wrong workchain {}", workchain))?;
+    let id = account.parse::<Int256>().map_err(|_e| format!("wrong account id {}", account))?;
     Ok(AccountId { workchain, id })
 }
 
 pub fn parse_account_id(s: &str) -> std::result::Result<AccountId, String> {
     parse_account_base64(s).or_else(|e| parse_account_raw(s).map_err(|e2| format!("Can't parse account as base64 ({}) or as raw ({}))", e, e2)))
+}
+
+pub fn parse_key(s: &str) -> std::result::Result<[u8; 32], Box<dyn Error + Send + Sync>> {
+    Ok(base64::decode(s).or_else(|_e| hex::decode(s)).map_err(|_e| "can't parse key")?.as_slice().try_into()?)
 }

@@ -10,11 +10,12 @@ use ton_networkconfig::ConfigGlobal;
 use std::error::Error;
 use std::fs::{read_to_string, File};
 use std::io::{stdin, Read};
+use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::{Duration, UNIX_EPOCH};
 
-use crate::arg_parsers::{parse_account_id, parse_block_id_ext};
+use crate::arg_parsers::{parse_account_id, parse_block_id_ext, parse_key};
 
 type Result<T> = std::result::Result<T, Box<dyn Error>>;
 
@@ -27,6 +28,12 @@ struct Args {
     /// Use testnet config, if not provided use mainnet config
     #[clap(short, long, parse(from_flag), group = "config-group")]
     testnet: bool,
+    /// Liteserver address (IP:PORT)
+    #[clap(long, group = "config-group")]
+    address: Option<SocketAddr>,
+    /// Liteserver public key (hex-encoded)
+    #[clap(long, value_parser = parse_key, requires = "address")]
+    public_key: Option<[u8; 32]>,
     #[clap(subcommand)]
     command: Commands,
 }
@@ -215,21 +222,31 @@ enum Commands {
         start_after: Option<Int256>,
         modified_after: Option<u32>,
     },
+    GetLibraries {
+        library_list: Vec<Int256>,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::init();
     let args = Args::parse();
-    let config_json = if let Some(config) = args.config {
-        read_to_string(config)?
+    
+    let client = if let (Some(address), Some(public_key)) = (&args.address, &args.public_key) {
+        LiteClient::connect(address, public_key).await?
     } else {
-        download_config(args.testnet).await?
+        let config_json = if let Some(config) = args.config {
+            read_to_string(config)?
+        } else {
+            download_config(args.testnet).await?
+        };
+        let config: ConfigGlobal = ConfigGlobal::from_str(&config_json)?;
+        let ls = config.liteservers.choose(&mut rand::thread_rng()).unwrap();
+        let public_key: [u8; 32] = ls.id.clone().into();
+        LiteClient::connect(ls.socket_addr(), public_key).await?
     };
-    let config: ConfigGlobal = ConfigGlobal::from_str(&config_json)?;
-    let ls = config.liteservers.choose(&mut rand::thread_rng()).unwrap();
-    let public_key: [u8; 32] = ls.id.clone().into();
-    let mut client = LiteClient::connect(ls.socket_addr(), public_key).await?;
+
+    let mut client = client;
 
     if let Err(e) = execute_command(&mut client, &args.command).await {
         println!("[ERROR] {:?}", e);
@@ -391,6 +408,10 @@ async fn execute_command(client: &mut LiteClient, command: &Commands) -> Result<
                 start_after.clone(),
                 *modified_after,
             ).await?;
+            println!("{:#?}", result);
+        }
+        Commands::GetLibraries { library_list } => {
+            let result = client.get_libraries(library_list.clone()).await?;
             println!("{:#?}", result);
         }
     };

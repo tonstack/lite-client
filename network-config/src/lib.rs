@@ -2,10 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
-#[cfg(feature = "dalek")]
-use x25519_dalek::PublicKey;
-#[cfg(feature = "adnl")]
-use adnl::AdnlPublicKey;
 
 #[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Debug, Clone)]

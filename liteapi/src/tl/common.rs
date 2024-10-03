@@ -119,6 +119,7 @@ pub struct TransactionId3 {
 // #[tl(boxed, id = "liteServer.signature", scheme_inline = r##"liteServer.signature node_id_short:int256 signature:bytes = liteServer.Signature;"##)]
 pub struct Signature {
     pub node_id_short: Int256,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub signature: Vec<u8>,
 }
 
@@ -150,8 +151,11 @@ pub enum BlockLink {
         to_key_block: bool,
         from: BlockIdExt,
         to: BlockIdExt,
+        #[derivative(Debug(format_with = "fmt_bytes"))]
         dest_proof: Vec<u8>,
+        #[derivative(Debug(format_with = "fmt_bytes"))]
         proof: Vec<u8>,
+        #[derivative(Debug(format_with = "fmt_bytes"))]
         state_proof: Vec<u8>,
     },
     /// liteServer.blockLinkForward to_key_block:Bool from:tonNode.blockIdExt to:tonNode.blockIdExt dest_proof:bytes config_proof:bytes signatures:liteServer.SignatureSet = liteServer.BlockLink;
@@ -160,7 +164,9 @@ pub enum BlockLink {
         to_key_block: bool,
         from: BlockIdExt,
         to: BlockIdExt,
+        #[derivative(Debug(format_with = "fmt_bytes"))]
         dest_proof: Vec<u8>,
+        #[derivative(Debug(format_with = "fmt_bytes"))]
         config_proof: Vec<u8>,
         signatures: SignatureSet,
     },
@@ -196,5 +202,6 @@ pub struct TransactionId {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct LibraryEntry {
     pub hash: Int256,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub data: Vec<u8>,
 }
