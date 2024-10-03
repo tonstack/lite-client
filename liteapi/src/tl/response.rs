@@ -45,6 +45,7 @@ pub struct Version {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct BlockData {
     pub id: BlockIdExt,
+    #[derivative(Debug(format_with="fmt_bytes"))]
     pub data: Vec<u8>,
 }
 
@@ -54,6 +55,7 @@ pub struct BlockState {
     pub id: BlockIdExt,
     pub root_hash: Int256,
     pub file_hash: Int256,
+    #[derivative(Debug(format_with="fmt_bytes"))]
     pub data: Vec<u8>,
 }
 
@@ -73,6 +75,7 @@ pub struct BlockHeader {
     pub with_shard_hashes: Option<()>,
     #[tl(flags_bit = "mode.6")]
     pub with_prev_blk_signatures: Option<()>,
+    #[derivative(Debug(format_with="fmt_bytes"))]
     pub header_proof: Vec<u8>,
 }
 
@@ -103,17 +106,23 @@ pub struct RunMethodResult {
     pub id: BlockIdExt,
     pub shardblk: BlockIdExt,
     #[tl(flags_bit = "mode.0")]
+    #[derivative(Debug(format_with="fmt_opt_bytes"))] 
     pub shard_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.0")]
+    #[derivative(Debug(format_with="fmt_opt_bytes"))] 
     pub proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.1")]
+    #[derivative(Debug(format_with="fmt_opt_bytes"))] 
     pub state_proof: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.3")]
+    #[derivative(Debug(format_with="fmt_opt_bytes"))] 
     pub init_c7: Option<Vec<u8>>,
     #[tl(flags_bit = "mode.4")]
+    #[derivative(Debug(format_with="fmt_opt_bytes"))] 
     pub lib_extras: Option<Vec<u8>>,
     pub exit_code: i32,
     #[tl(flags_bit = "mode.2")]
+    #[derivative(Debug(format_with="fmt_opt_bytes"))] 
     pub result: Option<Vec<u8>>,
 }
 
@@ -122,7 +131,9 @@ pub struct RunMethodResult {
 pub struct ShardInfo {
     pub id: BlockIdExt,
     pub shardblk: BlockIdExt,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub shard_proof: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub shard_descr: Vec<u8>,
 }
 
@@ -130,7 +141,9 @@ pub struct ShardInfo {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct AllShardsInfo {
     pub id: BlockIdExt,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub proof: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub data: Vec<u8>,
 }
 
@@ -138,7 +151,9 @@ pub struct AllShardsInfo {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionInfo {
     pub id: BlockIdExt,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub proof: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub transaction: Vec<u8>,
 }
 
@@ -146,7 +161,18 @@ pub struct TransactionInfo {
 #[derivative(Debug, Clone, PartialEq)]
 pub struct TransactionList {
     pub ids: Vec<BlockIdExt>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub transactions: Vec<u8>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct TransactionMetadata {
+    #[tl(flags)]
+    mode: (),
+    depth: u32,
+    initiator: AccountId,
+    initiator_lt: u64,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -160,6 +186,8 @@ pub struct TransactionId {
     pub lt: Option<u64>,
     #[tl(flags_bit = "mode.2")]
     pub hash: Option<Int256>,
+    #[tl(flags_bit = "mode.8")]
+    pub metadata: Option<TransactionMetadata>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -169,6 +197,7 @@ pub struct BlockTransactions {
     pub req_count: u32,
     pub incomplete: bool,
     pub ids: Vec<TransactionId>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub proof: Vec<u8>,
 }
 
@@ -187,7 +216,9 @@ pub struct ConfigInfo {
     #[tl(flags)]
     pub mode: (),
     pub id: BlockIdExt,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub state_proof: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub config_proof: Vec<u8>,
     #[tl(flags_bit = "mode.0")]
     pub with_state_root: Option<()>,
@@ -221,7 +252,9 @@ pub struct ValidatorStats {
     pub id: BlockIdExt,
     pub count: u32,
     pub complete: bool,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub state_proof: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub data_proof: Vec<u8>,
 }
 
@@ -299,7 +332,7 @@ pub enum Response {
     #[tl(id = 0x6f26c60b)]
     TransactionList(TransactionList),
 
-    /// liteServer.transactionId mode:# account:mode.0?int256 lt:mode.1?long hash:mode.2?int256 = liteServer.TransactionId;
+    /// liteServer.transactionId mode:# account:mode.0?int256 lt:mode.1?long hash:mode.2?int256 metadata:mode.8?liteServer.transactionMetadata = liteServer.TransactionId;
     #[tl(id = 0xb12f65af)]
     TransactionId(TransactionId),
 

@@ -43,11 +43,10 @@ impl FromStr for ConfigGlobal {
     }
 }
 
-#[cfg(feature = "adnl")]
-impl AdnlPublicKey for ConfigPublicKey {
-    fn to_bytes(&self) -> [u8; 32] {
+impl Into<[u8; 32]> for ConfigPublicKey {
+    fn into(self) -> [u8; 32] {
         match self {
-            ConfigPublicKey::Ed25519 { key } => *key,
+            ConfigPublicKey::Ed25519 { key } => key,
         }
     }
 }

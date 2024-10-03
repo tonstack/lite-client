@@ -1,7 +1,7 @@
 use std::error::Error;
 
 use regex::Regex;
-use ton_liteapi::tl_types::{Int256, BlockIdExt, AccountId};
+use ton_liteapi::tl::common::{Int256, BlockIdExt, AccountId};
 
 pub fn parse_block_id_ext(s: &str) -> std::result::Result<BlockIdExt, String> {
     let re = Regex::new(r"\(([-]?\d+),([a-fA-F0-9]+),(\d+)\):([^:]+):(.+)").unwrap();

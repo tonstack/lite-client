@@ -27,6 +27,14 @@ pub fn fmt_bytes(bytes: &[u8], f: &mut std::fmt::Formatter) -> Result<(), std::f
     write!(f, "0x{}", hex::encode(bytes))
 }
 
+pub fn fmt_opt_bytes<T: AsRef<[u8]>>(bytes: &Option<T>, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    if let Some(bytes) = bytes {
+        write!(f, "Some(0x{})", hex::encode(bytes))
+    } else {
+        write!(f, "None")
+    }
+}
+
 pub mod struct_as_bytes {
     use tl_proto::{TlPacket, TlRead, TlResult, TlWrite};
 

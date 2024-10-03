@@ -16,4 +16,4 @@ regex = "1"
 ton_liteapi = { path = "../liteapi" }
 ton_networkconfig = { path = "../network-config", features = ["adnl"] }
 rand = "0.8.5"
-adnl = "0.1.0"
+tokio = { version = "1.36", features = ["full"] }
