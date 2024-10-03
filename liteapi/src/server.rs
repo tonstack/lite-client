@@ -4,8 +4,8 @@ use std::io::ErrorKind;
 use std::net::SocketAddr;
 use std::time::Duration;
 
+use adnl::crypto::KeyPair;
 use adnl::AdnlPeer;
-use adnl::AdnlPrivateKey;
 use tokio::net::TcpListener;
 use tokio::net::ToSocketAddrs;
 use tokio_tower::multiplex::Server;
@@ -15,14 +15,13 @@ use tower::Service;
 use crate::peer::LitePeer;
 use crate::tl::adnl::Message;
 
-pub async fn serve<A, S, M>(addr: &A, private_key: S, mut service_maker: M) -> Result<(), Box<dyn std::error::Error>> 
+pub async fn serve<A, M>(addr: &A, private_key: KeyPair, mut service_maker: M) -> Result<(), Box<dyn std::error::Error>> 
     where A: ToSocketAddrs, 
           M: MakeService<SocketAddr, Message, Response = Message> + Send,
           M::Error: std::fmt::Debug,
           M::MakeError: std::error::Error,
           M::Service: Send + 'static,
-          <M::Service as Service<Message>>::Future: Send,
-          S: AdnlPrivateKey + Clone + Send + Sync + 'static {
+          <M::Service as Service<Message>>::Future: Send {
     let listener = TcpListener::bind(addr).await?;
 
     loop {
@@ -46,14 +45,31 @@ pub async fn serve<A, S, M>(addr: &A, private_key: S, mut service_maker: M) -> R
             }
         };
         log::debug!("[{addr:?}] Accepted socket");
-        poll_fn(|cx| service_maker.poll_ready(cx)).await.expect("polling service maker failed");
-        let service = service_maker.make_service(addr).await.expect("making service failed");
+        if let Err(e) = poll_fn(|cx| service_maker.poll_ready(cx)).await {
+            log::error!("[{addr:?}] Polling failed: {:?}", e);
+            continue
+        };
+        let service = match service_maker.make_service(addr).await {
+            Ok(x) => x,
+            Err(e) => {
+                log::error!("[{addr:?}] Making service failed: {:?}", e);
+                continue
+            }
+        };
         let private_key = private_key.clone();
         tokio::spawn(async move {
-            let adnl = AdnlPeer::handle_handshake(socket, |_| Some(private_key.clone())).await.expect("handshake failed");
+            let adnl = match AdnlPeer::handle_handshake(socket, |_| Some(private_key.clone())).await {
+                Ok(x) => x,
+                Err(e) => {
+                    log::error!("[{addr:?}] Handshake failed: {:?}", e);
+                    return
+                }
+            };
             log::debug!("[{addr:?}] Handshake performed");
             let lite = LitePeer::new(adnl);
-            Server::new(lite, service).await.expect("server failed");
+            if let Err(e) = Server::new(lite, service).await {
+                log::error!("[{addr:?}] Server failed: {:?}", e);
+            }
         });
     }
 }

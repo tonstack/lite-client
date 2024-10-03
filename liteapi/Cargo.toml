@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-adnl = { git = "https://github.com/tonstack/adnl-rs", branch = "server" }
+adnl = "2.0.0"
 tl-proto = { version = "0.4", features = ["bytes"] }
 derivative = "2.2.0"
 log = { version = "0.4.14", features = ["max_level_trace"] }

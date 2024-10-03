@@ -19,6 +19,6 @@ pub enum LiteError {
     UnknownError(#[from] Box<dyn std::error::Error + Send + Sync + 'static>)
 }
 
-pub trait LiteService {}
+pub trait LiteService: Service<WrappedRequest, Response = Response, Error = LiteError> where Self::Future: Send + 'static {}
 
-impl<T> LiteService for T where T: Service<WrappedRequest, Response = Response, Error = LiteError> {}
+impl<T> LiteService for T where T: Service<WrappedRequest, Response = Response, Error = LiteError>, T::Future: Send + 'static {}

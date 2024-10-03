@@ -1,27 +1,16 @@
-use adnl::{AdnlPeer, AdnlRawPublicKey};
-use tokio_tower::multiplex;
-use ton_liteapi::layers::WrapMessagesLayer;
-use ton_liteapi::peer::LitePeer;
-use ton_liteapi::tl::request::{Request, WrappedRequest};
-use tower::{Service, ServiceBuilder, ServiceExt};
+use ton_liteapi::client::LiteClient;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
-    let server_public = AdnlRawPublicKey::try_from(&*hex::decode("691a14528fb2911839649c489cb4cbec1f4aa126c244c0ea2ac294eb568a7037")?)?;
-    let ls_ip = "127.0.0.1";
-    let ls_port: u16 = 8080;
-    let adnl = AdnlPeer::connect(&server_public, (ls_ip, ls_port)).await?;
-    let lite = LitePeer::new(adnl);
-    let mut service = ServiceBuilder::new()
-        .layer(WrapMessagesLayer)
-        .service(multiplex::Client::<_, Box<dyn std::error::Error + Send + Sync + 'static>, _>::new(lite));
-    let message = WrappedRequest { wait_masterchain_seqno: None, request: Request::GetTime };
-    let result = service.ready().await?.call(message.clone()).await?;
+    let server_public = hex::decode("9f69357376ad875d1543faea6f0bb9fbcd283521b743b1c0d2d432587fe9dbae")?;
+    let server_address = ("127.0.0.1", 8080);
+    let mut liteclient = LiteClient::connect(server_address, server_public).await?;
+    let result = liteclient.get_time().await?;
     println!("{:?}", result);
-    let result = service.ready().await?.call(message.clone()).await?;
+    let result = liteclient.get_time().await?;
     println!("{:?}", result);
-    let result = service.ready().await?.call(message.clone()).await?;
+    let result = liteclient.get_time().await?;
     println!("{:?}", result);
     Ok(())
 }

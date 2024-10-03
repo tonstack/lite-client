@@ -248,7 +248,7 @@ pub struct GetConfigParams {
 pub struct GetValidatorStats {
     #[tl(flags)]
     pub mode: (),
-    id: BlockIdExt,
+    pub id: BlockIdExt,
     pub limit: u32,
     #[tl(flags_bit = "mode.0")]
     pub start_after: Option<Int256>,
