@@ -2,10 +2,6 @@ use serde::{Deserialize, Serialize};
 use std::net::{Ipv4Addr, SocketAddrV4};
 use std::ops::{Deref, DerefMut};
 use std::str::FromStr;
-#[cfg(feature = "dalek")]
-use x25519_dalek::PublicKey;
-#[cfg(feature = "adnl")]
-use adnl::AdnlPublicKey;
 
 #[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -43,11 +39,10 @@ impl FromStr for ConfigGlobal {
     }
 }
 
-#[cfg(feature = "adnl")]
-impl AdnlPublicKey for ConfigPublicKey {
-    fn to_bytes(&self) -> [u8; 32] {
+impl Into<[u8; 32]> for ConfigPublicKey {
+    fn into(self) -> [u8; 32] {
         match self {
-            ConfigPublicKey::Ed25519 { key } => *key,
+            ConfigPublicKey::Ed25519 { key } => key,
         }
     }
 }
