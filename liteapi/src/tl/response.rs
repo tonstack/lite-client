@@ -266,6 +266,17 @@ pub struct LibraryResult {
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
+pub struct LibraryResultWithProof {
+    pub id: BlockIdExt,
+    #[tl(flags)]
+    pub mode: (),
+    pub result: Vec<LibraryEntry>,
+    pub state_proof: Vec<u8>,
+    pub data_proof: Vec<u8>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
 pub struct Error {
     pub code: i32,
     #[derivative(Debug(format_with = "String::fmt"))]
@@ -355,6 +366,10 @@ pub enum Response {
     /// liteServer.libraryResult result:(vector liteServer.libraryEntry) = liteServer.LibraryResult;
     #[tl(id = 0x117ab96b)]
     LibraryResult(LibraryResult),
+
+    /// liteServer.libraryResult result:(vector liteServer.libraryEntry) = liteServer.LibraryResult;
+    #[tl(id = 0x10a927bf)]
+    LibraryResultWithProof(LibraryResultWithProof),
 
     /// liteServer.error code:int message:string = liteServer.Error;
     #[tl(id = 0xbba9e148)]
