@@ -5,9 +5,9 @@ Implementation of [lite_api](https://github.com/ton-blockchain/ton/blob/master/t
 | Feature           | Status                           |
 | ----------------- | -------------------------------- |
 | lite_api client   | ✅ Implemented                  |
-| lite_api server   | ❌ Not implemented              |
+| lite_api server   | ✅ Implemented                  |
 | lite-client cli   | ✅ Implemented                  |
-| async             | ❌ Not implemented              |
+| async             | ✅ Implemented                  |
 
 ## Installation
 ```bash
