@@ -2,6 +2,12 @@
 name = "ton_liteapi"
 version = "0.1.0"
 edition = "2021"
+description = "Implementation of TON lite_api.tl interface"
+repository = "https://github.com/tonstack/lite-client"
+keywords = ["ton"]
+categories = ["network-programming"]
+license = "MIT"
+authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>"]
 
 [dependencies]
 adnl = "2.0.0"
