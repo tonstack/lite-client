@@ -1,7 +1,13 @@
 [package]
-name = "cli"
+name = "ton_lc"
 version = "0.1.0"
 edition = "2021"
+description = "Low-level implementation of TON lite client"
+repository = "https://github.com/tonstack/lite-client"
+keywords = ["ton"]
+categories = ["network-programming"]
+license = "MIT"
+authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>"]
 
 [dependencies]
 base64 = "0.13.0"
@@ -13,7 +19,7 @@ chrono = "0.4.19"
 hex = "0.4.3"
 ureq = "2.4.0"
 regex = "1"
-ton_liteapi = { path = "../liteapi" }
-ton_networkconfig = { path = "../network-config" }
+ton_liteapi = "0.1.0"
+ton_networkconfig = "0.1.0"
 rand = "0.8.5"
 tokio = { version = "1.36", features = ["full"] }

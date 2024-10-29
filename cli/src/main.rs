@@ -56,10 +56,12 @@ enum Commands {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
     },
+    /// Download state for masterchain block seqnos < 1000
     GetState {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
     },
+    /// Download block header with specified merkle proofs
     GetBlockHeader {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
@@ -77,15 +79,17 @@ enum Commands {
     /// Send external message
     #[clap(arg_required_else_help = true, parse(from_os_str))]
     SendMessage {
-        /// File to send
+        /// File to send or "-" for reading from stdin
         file: PathBuf,
     },
+    /// Download account state at specified block
     GetAccountState {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
         #[clap(value_parser = parse_account_id)]
         account_id: AccountId,
     },
+    /// Run get-method for smart contract
     RunSmcMethod {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
@@ -112,6 +116,7 @@ enum Commands {
         account_id: AccountId,
         lt: u64,
     },
+    /// Iterate through transactions for an account
     GetTransactions {
         count: u32,
         #[clap(value_parser = parse_account_id)]
@@ -119,6 +124,7 @@ enum Commands {
         lt: u64,
         hash: Int256,
     },
+    /// Find block by seqno, lt or utime, block header will be downloaded with specified merkle proofs
     LookupBlock {
         workchain: i32,
         shard: u64,
@@ -139,6 +145,7 @@ enum Commands {
         #[clap(long)]
         with_prev_blk_signatures: bool,
     },
+    /// List transactions for a specified block
     ListBlockTransactions {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
@@ -152,6 +159,7 @@ enum Commands {
         #[clap(requires = "after-account", long)]
         after_lt: Option<u64>,
     },
+    /// Download masterchain proof
     GetBlockProof {
         #[clap(value_parser = parse_block_id_ext)]
         known_block: BlockIdExt,
@@ -162,6 +170,7 @@ enum Commands {
         #[clap(long)]
         base_block_from_request: bool,
     },
+    /// Download all config params
     GetConfigAll {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
@@ -188,6 +197,7 @@ enum Commands {
         #[clap(long)]
         extract_from_key_block: bool,
     },
+    /// Download specified config params
     GetConfigParams {
         #[clap(value_parser = parse_block_id_ext)]
         block_id_ext: BlockIdExt,
@@ -222,6 +232,7 @@ enum Commands {
         start_after: Option<Int256>,
         modified_after: Option<u32>,
     },
+    /// Download specified libraries
     GetLibraries {
         library_list: Vec<Int256>,
     },

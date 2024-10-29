@@ -1,39 +1,83 @@
 # TON lite_api
 
-Implementation of [lite_api](https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/lite_api.tl) and [lite-client](https://github.com/ton-blockchain/ton/tree/master/lite-client) in Rust using [adnl-rs](https://github.com/tonstack/adnl-rs).
+Implementation of low-level [lite_api](https://github.com/ton-blockchain/ton/blob/master/tl/generate/scheme/lite_api.tl) and [lite-client](https://github.com/ton-blockchain/ton/tree/master/lite-client) in Rust using [adnl-rs](https://github.com/tonstack/adnl-rs).
 
-| Feature           | Status                           |
-| ----------------- | -------------------------------- |
-| lite_api client   | ✅ Implemented                  |
-| lite_api server   | ✅ Implemented                  |
-| lite-client cli   | ✅ Implemented                  |
-| async             | ✅ Implemented                  |
+| Feature         | Status         |
+| --------------- | -------------- |
+| lite_api client | ✅ Implemented |
+| lite_api server | ✅ Implemented |
+| lite-client cli | ✅ Implemented |
+| async           | ✅ Implemented |
 
 ## Installation
+
 ```bash
-cargo install --git https://github.com/tonstack/lite-client
+cargo install ton_lc
 ```
 
 ## Usage
+
 Without any options, [mainnet config](https://ton.org/global.config.json) will be used.
 For testnet, use `-t / --testnet` flag.
-To use your own config, pass `-c / --config <FILE>` option. 
+To use your own config, pass `-c / --config <FILE>` option.
+Also you can use `--address` and `--public-key` to connect to specific liteserver.
 
 Send an external message to TON:
+
 ```bash
-echo 1234 | liteclient send -  # accept message bytes from stdin
-liteclient send ./query.boc  # read from file
+echo 1234 | ton_lc send-message -  # accept message bytes from stdin
+ton_lc send-message ./query.boc  # read from file
 ```
+
 It prints:
+
 ```
 [ERROR] Server error [code=0]: cannot apply external message to current state : failed to parse external message cannot deserialize bag-of-cells: invalid header, error 0
 ```
 
-## Debug logging
-```bash
-echo 1234 | RUST_LOG=debug liteclient send -
 ```
+OPTIONS:
+        --address <ADDRESS>          Liteserver address (IP:PORT)
+    -c, --config <FILE>              Local network config from file
+    -h, --help                       Print help information
+        --public-key <PUBLIC_KEY>    Liteserver public key (hex-encoded)
+    -t, --testnet                    Use testnet config, if not provided use mainnet config
+    -V, --version                    Print version information
+
+SUBCOMMANDS:
+    get-account-state           Download account state at specified block
+    get-all-shards-info
+    get-block                   Downloads and dumps specified block
+    get-block-header            Download block header with specified merkle proofs
+    get-block-proof             Download masterchain proof
+    get-config-all              Download all config params
+    get-config-params           Download specified config params
+    get-libraries               Download specified libraries
+    get-masterchain-info        Get masterchain info
+    get-masterchain-info-ext    Get masterchain info with additional data
+    get-one-transaction
+    get-shard-info
+    get-state                   Download state for masterchain block seqnos < 1000
+    get-time                    Get server time
+    get-transactions            Iterate through transactions for an account
+    get-validator-stats
+    get-version                 Shows server time, version and capabilities
+    help                        Print this message or the help of the given subcommand(s)
+    list-block-transactions     List transactions for a specified block
+    lookup-block                Find block by seqno, lt or utime, block header will be
+                                    downloaded with specified merkle proofs
+    run-smc-method              Run get-method for smart contract
+    send-message                Send external message
+```
+
+## Debug logging
+
+```bash
+echo 1234 | RUST_LOG=debug ton_lc send-message -
+```
+
 prints:
+
 ```
 [2022-03-15T10:43:55Z DEBUG liteclient::private] Sending query:
     Length: 20 (0x14) bytes

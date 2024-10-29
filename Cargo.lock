@@ -268,25 +268,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cli"
-version = "0.1.0"
-dependencies = [
- "base64 0.13.1",
- "chrono",
- "clap",
- "env_logger 0.9.3",
- "hex",
- "log",
- "pretty-hex",
- "rand",
- "regex",
- "tokio",
- "ton_liteapi",
- "ton_networkconfig",
- "ureq",
-]
-
-[[package]]
 name = "colorchoice"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1496,6 +1477,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "ton_lc"
+version = "0.1.0"
+dependencies = [
+ "base64 0.13.1",
+ "chrono",
+ "clap",
+ "env_logger 0.9.3",
+ "hex",
+ "log",
+ "pretty-hex",
+ "rand",
+ "regex",
+ "tokio",
+ "ton_liteapi 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ton_networkconfig 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ureq",
+]
+
+[[package]]
 name = "ton_liteapi"
 version = "0.1.0"
 dependencies = [
@@ -1519,8 +1519,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "ton_liteapi"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2ccb9ece58a1ede8fc27ed076c8c1c8063f88e9ec7e825e488c436b49ab46ca"
+dependencies = [
+ "adnl",
+ "derivative",
+ "futures",
+ "hex",
+ "log",
+ "pin-project",
+ "rand",
+ "thiserror",
+ "tl-proto",
+ "tokio",
+ "tokio-tower",
+ "tokio-util",
+ "tower",
+]
+
+[[package]]
 name = "ton_networkconfig"
 version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "serde_with",
+]
+
+[[package]]
+name = "ton_networkconfig"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9ab402c6f30bbe26914481ad184d5d9e8e54deaf4a4f6e52946f3547c998342f"
 dependencies = [
  "serde",
  "serde_json",
