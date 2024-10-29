@@ -2,6 +2,12 @@
 name = "ton_networkconfig"
 version = "0.1.0"
 edition = "2021"
+description = "Implementation of TON config.json structures with network parameters"
+repository = "https://github.com/tonstack/lite-client"
+keywords = ["ton"]
+categories = ["network-programming"]
+license = "MIT"
+authors = ["Vladimir Lebedev <d3fl4t3@gmail.com>"]
 
 [dependencies]
 serde = { version = "1.0.136", features = ["derive"] }
