@@ -155,6 +155,31 @@ pub struct LookupBlock {
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
+pub struct LookupBlockWithProof {
+    #[tl(flags)]
+    pub mode: (),
+    pub id: BlockId,
+    pub mc_block_id: BlockIdExt,
+    #[tl(flags_bit = "mode.0")]
+    pub seqno: Option<()>,
+    #[tl(flags_bit = "mode.1")]
+    pub lt: Option<u64>,
+    #[tl(flags_bit = "mode.2")]
+    pub utime: Option<u32>,
+    #[tl(flags_bit = "mode.4")]
+    pub with_state_update: Option<()>,
+    #[tl(flags_bit = "mode.5")]
+    pub with_value_flow: Option<()>,
+    #[tl(flags_bit = "mode.8")]
+    pub with_extra: Option<()>,
+    #[tl(flags_bit = "mode.9")]
+    pub with_shard_hashes: Option<()>,
+    #[tl(flags_bit = "mode.10")]
+    pub with_prev_blk_signatures: Option<()>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
 pub struct ListBlockTransactions {
     pub id: BlockIdExt,
     #[tl(flags)]
@@ -273,6 +298,61 @@ pub struct GetLibrariesWithProof {
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
+pub struct GetShardBlockProof {
+    pub id: BlockIdExt,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct GetOutMsgQueueSizes {
+    #[tl(flags)]
+    pub mode: (),
+    #[tl(flags_bit = "mode.0")]
+    pub shard_id: Option<(u32, u64)>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct GetBlockOutMsgQueueSize {
+    #[tl(flags)]
+    pub mode: (),
+    pub id: BlockIdExt,
+    #[tl(flags_bit = "mode.0")]
+    pub want_proof: Option<()>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct GetDispatchQueueInfo {
+    #[tl(flags)]
+    pub mode: (),
+    pub id: BlockIdExt,
+    #[tl(flags_bit = "mode.0")]
+    pub want_proof: Option<()>,
+    #[tl(flags_bit = "mode.1")]
+    pub after_addr: Option<Int256>,
+    pub max_accounts: u32,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct GetDispatchQueueMessages {
+    #[tl(flags)]
+    pub mode: (),
+    pub id: BlockIdExt,
+    pub addr: Int256,
+    pub after_lt: u64,
+    pub max_messages: u32,
+    #[tl(flags_bit = "mode.0")]
+    pub want_proof: Option<()>,
+    #[tl(flags_bit = "mode.1")]
+    pub one_account: Option<()>,
+    #[tl(flags_bit = "mode.2")]
+    pub message_boc: Option<()>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
 #[tl(boxed)]
 pub enum Request {
     /// liteServer.getMasterchainInfo = liteServer.MasterchainInfo;
@@ -311,6 +391,10 @@ pub enum Request {
     #[tl(id = 0x6b890e25)]
     GetAccountState(GetAccountState),
 
+    /// liteServer.getAccountStatePrunned id:tonNode.blockIdExt account:liteServer.accountId = liteServer.AccountState;
+    #[tl(id = 0x5a698507)]
+    GetAccountStatePrunned(GetAccountState),
+
     /// liteServer.runSmcMethod mode:# id:tonNode.blockIdExt account:liteServer.accountId method_id:long params:bytes = liteServer.RunMethodResult;
     #[tl(id = 0x5cc65dd2)]
     RunSmcMethod(RunSmcMethod),
@@ -335,9 +419,17 @@ pub enum Request {
     #[tl(id = 0xfac8f71e)]
     LookupBlock(LookupBlock),
 
+    /// liteServer.lookupBlockWithProof mode:# id:tonNode.blockId mc_block_id:tonNode.blockIdExt lt:mode.1?long utime:mode.2?int = liteServer.LookupBlockResult;
+    #[tl(id = 0x9c045ff8)]
+    LookupBlockWithProof(LookupBlockWithProof),
+
     /// liteServer.listBlockTransactions id:tonNode.blockIdExt mode:# count:# after:mode.7?liteServer.transactionId3 reverse_order:mode.6?true want_proof:mode.5?true = liteServer.BlockTransactions;
     #[tl(id = 0xadfcc7da)]
     ListBlockTransactions(ListBlockTransactions),
+
+    /// liteServer.listBlockTransactionsExt id:tonNode.blockIdExt mode:# count:# after:mode.7?liteServer.transactionId3 reverse_order:mode.6?true want_proof:mode.5?true = liteServer.BlockTransactionsExt;
+    #[tl(id = 0x0079dd5c)]
+    ListBlockTransactionsExt(ListBlockTransactions),
 
     /// liteServer.getBlockProof mode:# known_block:tonNode.blockIdExt target_block:mode.0?tonNode.blockIdExt = liteServer.PartialBlockProof;
     #[tl(id = 0x8aea9c44)]
@@ -352,7 +444,7 @@ pub enum Request {
     GetConfigParams(GetConfigParams),
 
     /// liteServer.getValidatorStats#091a58bc mode:# id:tonNode.blockIdExt limit:int start_after:mode.0?int256 modified_after:mode.2?int = liteServer.ValidatorStats;
-    #[tl(id = 0xe7253699)]
+    #[tl(id = 0x091a58bc)]
     GetValidatorStats(GetValidatorStats),
 
     /// liteServer.getLibraries library_list:(vector int256) = liteServer.LibraryResult;
@@ -362,4 +454,24 @@ pub enum Request {
     /// liteServer.getLibrariesWithProof id:tonNode.blockIdExt mode:# library_list:(vector int256) = liteServer.LibraryResultWithProof;
     #[tl(id = 0xd97693bd)]
     GetLibrariesWithProof(GetLibrariesWithProof),
+
+    /// liteServer.getShardBlockProof id:tonNode.blockIdExt = liteServer.ShardBlockProof;
+    #[tl(id = 0x4ca60350)]
+    GetShardBlockProof(GetShardBlockProof),
+
+    /// liteServer.getOutMsgQueueSizes mode:# wc:mode.0?int shard:mode.0?long = liteServer.OutMsgQueueSizes;
+    #[tl(id = 0x7bc19c36)]
+    GetOutMsgQueueSizes(GetOutMsgQueueSizes),
+
+    /// liteServer.getBlockOutMsgQueueSize mode:# id:tonNode.blockIdExt want_proof:mode.0?true = liteServer.BlockOutMsgQueueSize;
+    #[tl(id = 0x8f6c7779)]
+    GetBlockOutMsgQueueSize(GetBlockOutMsgQueueSize),
+
+    /// liteServer.getDispatchQueueInfo mode:# id:tonNode.blockIdExt after_addr:mode.1?int256 max_accounts:int want_proof:mode.0?true = liteServer.DispatchQueueInfo;
+    #[tl(id = 0x01e66bf3)]
+    GetDispatchQueueInfo(GetDispatchQueueInfo),
+
+    /// liteServer.getDispatchQueueMessages mode:# id:tonNode.blockIdExt addr:int256 after_lt:long max_messages:int want_proof:mode.0?true one_account:mode.1?true messages_boc:mode.2?true = liteServer.DispatchQueueMessages;
+    #[tl(id = 0xbbfd6439)]
+    GetDispatchQueueMessages(GetDispatchQueueMessages),
 }

@@ -203,6 +203,18 @@ pub struct BlockTransactions {
 
 #[derive(TlRead, TlWrite, Derivative)]
 #[derivative(Debug, Clone, PartialEq)]
+pub struct BlockTransactionsExt {
+    pub id: BlockIdExt,
+    pub req_count: u32,
+    pub incomplete: bool,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
+    pub transactions: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
+    pub proof: Vec<u8>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
 pub struct PartialBlockProof {
     pub complete: bool,
     pub from: BlockIdExt,
@@ -271,8 +283,116 @@ pub struct LibraryResultWithProof {
     #[tl(flags)]
     pub mode: (),
     pub result: Vec<LibraryEntry>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub state_proof: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
     pub data_proof: Vec<u8>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct ShardBlockLink {
+    pub id: BlockIdExt,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
+    pub proof: Vec<u8>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct ShardBlockProof {
+    pub masterchain_id: BlockIdExt,
+    pub links: Vec<ShardBlockLink>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct LookupBlockResult {
+    pub id: BlockIdExt,
+    #[tl(flags)]
+    pub mode: (),
+    pub mc_block_id: BlockIdExt,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
+    pub client_mc_state_proof: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
+    pub mc_block_proof: Vec<u8>,
+    pub shard_links: Vec<ShardBlockLink>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
+    pub header: Vec<u8>,
+    #[derivative(Debug(format_with = "fmt_bytes"))]
+    pub prev_header: Vec<u8>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct OutMsgQueueSize {
+    pub id: BlockIdExt,
+    pub size: u32,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct OutMsgQueueSizes {
+    pub shards: Vec<OutMsgQueueSize>,
+    pub ext_msg_queue_size_limit: u32,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct BlockOutMsgQueueSize {
+    #[tl(flags)]
+    pub mode: (),
+    pub id: BlockIdExt,
+    pub size: u64,
+    #[tl(flags_bit = "mode.0")]
+    #[derivative(Debug(format_with = "fmt_opt_bytes"))]
+    pub proof: Option<Vec<u8>>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct AccountDispatchQueueInfo {
+    pub addr: Int256,
+    pub size: u64,
+    pub min_lt: u64,
+    pub max_lt: u64,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct DispatchQueueInfo {
+    #[tl(flags)]
+    pub mode: (),
+    pub id: BlockIdExt,
+    pub account_dispatch_queues: Vec<AccountDispatchQueueInfo>,
+    pub complete: bool,
+    #[tl(flags_bit = "mode.0")]
+    #[derivative(Debug(format_with = "fmt_opt_bytes"))]
+    pub proof: Option<Vec<u8>>,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct DispatchQueueMessage {
+    pub addr: Int256,
+    pub lt: u64,
+    pub hash: Int256,
+    pub metadata: TransactionMetadata,
+}
+
+#[derive(TlRead, TlWrite, Derivative)]
+#[derivative(Debug, Clone, PartialEq)]
+pub struct DispatchQueueMessages {
+    #[tl(flags)]
+    pub mode: (),
+    pub id: BlockIdExt,
+    pub messages: Vec<DispatchQueueMessage>,
+    pub complete: bool,
+    #[tl(flags_bit = "mode.0")]
+    #[derivative(Debug(format_with = "fmt_opt_bytes"))]
+    pub proof: Option<Vec<u8>>,
+    #[tl(flags_bit = "mode.2")]
+    #[derivative(Debug(format_with = "fmt_opt_bytes"))]
+    pub messages_boc: Option<Vec<u8>>,
 }
 
 #[derive(TlRead, TlWrite, Derivative)]
@@ -370,6 +490,30 @@ pub enum Response {
     /// liteServer.libraryResult result:(vector liteServer.libraryEntry) = liteServer.LibraryResult;
     #[tl(id = 0x10a927bf)]
     LibraryResultWithProof(LibraryResultWithProof),
+
+    /// liteServer.shardBlockProof masterchain_id:tonNode.blockIdExt links:(vector liteServer.shardBlockLink) = liteServer.ShardBlockProof;
+    #[tl(id = 0x1d62a07a)]
+    ShardBlockProof(ShardBlockProof),
+
+    /// liteServer.lookupBlockResult id:tonNode.blockIdExt mode:# mc_block_id:tonNode.blockIdExt client_mc_state_proof:bytes mc_block_proof:bytes shard_links:(vector liteServer.shardBlockLink) header:bytes prev_header:bytes = liteServer.LookupBlockResult;
+    #[tl(id = 0x99786be7)]
+    LookupBlockResult(LookupBlockResult),
+
+    /// liteServer.outMsgQueueSizes shards:(vector liteServer.outMsgQueueSize) ext_msg_queue_size_limit:int = liteServer.OutMsgQueueSizes;
+    #[tl(id = 0xf8504a03)]
+    OutMsgQueueSizes(OutMsgQueueSizes),
+
+    /// liteServer.blockOutMsgQueueSize mode:# id:tonNode.blockIdExt size:long proof:mode.0?bytes = liteServer.BlockOutMsgQueueSize;
+    #[tl(id = 0x8acdbe1b)]
+    BlockOutMsgQueueSize(BlockOutMsgQueueSize),
+
+    /// liteServer.dispatchQueueInfo mode:# id:tonNode.blockIdExt account_dispatch_queues:(vector liteServer.accountDispatchQueueInfo) complete:Bool proof:mode.0?bytes = liteServer.DispatchQueueInfo;
+    #[tl(id = 0x5d1132d0)]
+    DispatchQueueInfo(DispatchQueueInfo),
+
+    /// liteServer.dispatchQueueMessages mode:# id:tonNode.blockIdExt messages:(vector liteServer.dispatchQueueMessage) complete:Bool proof:mode.0?bytes messages_boc:mode.2?bytes = liteServer.DispatchQueueMessages;
+    #[tl(id = 0x4b407931)]
+    DispatchQueueMessages(DispatchQueueMessages),
 
     /// liteServer.error code:int message:string = liteServer.Error;
     #[tl(id = 0xbba9e148)]
